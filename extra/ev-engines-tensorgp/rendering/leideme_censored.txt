@@ -1,0 +1,47 @@
+pylinhas.py 
+- Desenha linhas, triângulos, e polígonos de com N lados!
+Com muitos lados, dá bode. Mas engraçado.
+
+
+Genótipo: array com "num-lines" rows e "num-cols" columns.
+	- o número de rows dita o número de linhas
+	- o número de cols determina o número de vértices avança de 2 em 2 porque têm que ser sempre pares.
+	- o resto dos floats de cada row são para fazer encode de cor, espessura, etc.
+
+Args:
+	--num-lines 10
+Número de linhas
+
+	--num-cols 8    
+Linhas rectas
+
+	--num-cols 10
+Triâgulos de cantos arredondados
+
+	--num-cols 12
+Mais lados...
+
+------------------------------
+
+organic.py
+
+Número linhas
+
+--num-lines 15
+
+--num-cols tem que ser 13
+
+------------------------------
+
+thinorg.py
+
+Igual ao org, mas com linhas finas.
+
+--num-cols tem que ser 13
+------------------------------
+
+chars.py
+
+--num-cols tem que ser 8.
+
+Nada a apontar. São letras.
