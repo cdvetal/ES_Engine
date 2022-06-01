@@ -9,8 +9,7 @@ import numpy as np
 import csv
 
 # canonical interpolation function, like https://p5js.org/reference/#/p5/map
-def map_number(n, start1, stop1, start2, stop2):
-  return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
+
 
 # input: array of real vectors, length 8, each component normalized 0-1
 def render(a, size):
