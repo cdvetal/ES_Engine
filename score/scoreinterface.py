@@ -7,3 +7,4 @@ class ScoreInterface:
 
     def get_input_preprocessor(self):
         pass
+
