@@ -4,7 +4,7 @@ from efficientnet.tfkeras import preprocess_input
 
 
 class Scoring(ScoreInterface):
-    def __init__(self, config):
+    def __init__(self):
         super(Scoring, self).__init__()
         self.model = EfficientNetB0(weights='imagenet')
 

@@ -1,4 +1,7 @@
 class ScoreInterface:
+    def __init__(self):
+        pass
+
     def predict(self, batch, explain=False):
         pass
 

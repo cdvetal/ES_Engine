@@ -1,10 +1,9 @@
 from scoreinterface import ScoreInterface
-import os
 import tensorflow.keras as keras
 
 
 class Scoring(ScoreInterface):
-    def __init__(self, config):
+    def __init__(self):
         super(Scoring, self).__init__()
         self.model = keras.applications.resnet_v2.ResNet50V2()
 

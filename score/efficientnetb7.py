@@ -1,11 +1,10 @@
 from scoreinterface import ScoreInterface
-import os
 from efficientnet.keras import EfficientNetB7
 from efficientnet.keras import preprocess_input
 
 
 class Scoring(ScoreInterface):
-    def __init__(self, config):
+    def __init__(self):
         super(Scoring, self).__init__()
         self.model = EfficientNetB7(weights='imagenet')
 

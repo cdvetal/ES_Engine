@@ -1,5 +1,6 @@
 import csv
 import importlib
+import json
 import os
 import sys
 
@@ -95,15 +96,9 @@ def helpful_interface_message_exit(model_interface, e):
     sys.exit(1)
 
 
-def load_scoring_object(scoring_string):
-    print("Putas", scoring_string)
-    scoring_parts = scoring_string.split(":")
-    fullname = scoring_parts[0]
-    config_suffix = ""
-    if len(scoring_parts) > 1:
-        config_suffix = scoring_parts[1]
+def load_scoring_object(network_name):
     model_class_name = "Scoring"
-    model_module_name = fullname
+    model_module_name = network_name
     # print("Loading {} class from {}".format(model_class_name, model_module_name))
     try:
         scoring_class = getattr(importlib.import_module(model_module_name), model_class_name)
@@ -113,7 +108,64 @@ def load_scoring_object(scoring_string):
             # print("isto é meu    "+model_module_name)
             scoring_class = getattr(importlib.import_module("score." + model_module_name), model_class_name)
         except ImportError as e:
-            helpful_interface_message_exit(fullname, e)
+            helpful_interface_message_exit(model_module_name, e)
     # print("class loaded.")
-    scoring_object = scoring_class(config_suffix)
+    scoring_object = scoring_class()
     return scoring_object
+
+
+# utilities for mapping imagenet names <-> indexes
+def sanatize_label(label):
+    label = label.lower()
+    label = label.replace("'", "")
+    label = label.replace(" ", "_")
+    return label
+
+
+def open_class_mapping(filename="imagenet_class_index.json"):
+    class_file = os.path.expanduser(filename)
+    with open(class_file) as json_data:
+        mapping = json.load(json_data)
+    clean_mapping = {}
+    for k in mapping:
+        v = mapping[k]
+        clean_key = int(k)
+        clean_mapping[clean_key] = [sanatize_label(v[0]), sanatize_label(v[1])]
+    return clean_mapping
+
+
+def get_map_record_from_key(mapping, key):
+    if isinstance(key, int):
+        map_index = key
+    elif key.isdigit():
+        map_index = int(key)
+    else:
+        map_index = None
+        clean_label = sanatize_label(key)
+        # first try mapping the label to an index
+        for k in mapping:
+            if mapping[k][1] == clean_label and map_index is None:
+                map_index = k
+        if map_index is None:
+            # backup try mapping the label to a fullname
+            for k in mapping:
+                if mapping[k][2] == clean_label and map_index is None:
+                    map_index = k
+        if map_index is None:
+            print("class mapping for {} not found", key)
+            return None
+
+    return [map_index, mapping[map_index][0], mapping[map_index][1]]
+
+
+def get_class_index(mapping, key):
+    map_record = get_map_record_from_key(mapping, key)
+    if map_record is None:
+        return None
+    return map_record[0]
+
+
+def get_class_index_list(mapping, keys):
+    key_list = keys.split(",")
+    index_list = [get_class_index(mapping, k) for k in key_list]
+    return index_list

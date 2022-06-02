@@ -3,8 +3,12 @@ import random
 from datetime import datetime
 
 from PIL import Image
+import tensorflow as tf
+import torch
+from deap import gp, creator, base, tools, algorithms, cma
 
-from utils import save_gen_best, create_save_folder, get_active_models_from_arg
+from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
+    get_class_index_list
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import numpy as np
@@ -142,7 +146,6 @@ def main(args):
     print(args)
 
     # The cma module uses the np random number generator
-    """
     save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
 
     # The CMA-ES algorithm takes a population of one individual as argument
@@ -167,7 +170,7 @@ def main(args):
     logbook = tools.Logbook()
     logbook.header = "gen", "evals", "std", "min", "avg", "max"
 
-    
+    """
     for gen in range(N_GENS):
         COUNT_GENERATION = gen
         # Generate a new population
@@ -245,20 +248,25 @@ def setup_args():
         # save_folder = "{}/{}".format(save_folder, experiment_name)
         sub_folder = "from_checkpoint"
         save_folder, sub_folder = create_save_folder(args.save_folder, sub_folder)
-        CHECKPOINT = "{}/{}".format(save_folder, args.from_checkpoint)
+        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
     else:
         experiment_name = f"pylinhas_{args.renderer}_L{args.num_lines}_C{args.num_cols}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
         sub_folder = f"{experiment_name}_{args.n_gens}_{args.pop_size}"
         save_folder, sub_folder = create_save_folder(args.save_folder, sub_folder)
 
     ACTIVE_MODELS = get_active_models_from_arg(args.networks)
-    ACTIVE_MODELS_QUANTITY = len(ACTIVE_MODELS.keys())
-    """
+    # ACTIVE_MODELS_QUANTITY = len(ACTIVE_MODELS.keys())
+
+    for key, value in ACTIVE_MODELS.items():
+        pass
+        print("Key", key)
+        print("Model", value.model)
+
     class_mapping = open_class_mapping()
     if TARGET_CLASS is None or TARGET_CLASS == "none":
-        IMAGENET_INDEXES = None
+        args.imagenet_indexes = None
     else:
-        IMAGENET_INDEXES = get_class_index_list(class_mapping, TARGET_CLASS)
+        args.imagenet_indexes = get_class_index_list(class_mapping, TARGET_CLASS)
 
     if args.random_seed:
         print("Setting random seed: ", args.random_seed)
@@ -266,8 +274,9 @@ def setup_args():
         np.random.seed(args.random_seed)
         torch.manual_seed(args.random_seed)
         # TODO: not do this or maybe there is a tf2 way?
-        tf.compat.v1.set_random_seed(args.random_seed)
-    """
+        # tf.compat.v1.set_random_seed(args.random_seed)
+        # TODO: Confirm this works
+        tf.random.set_seed(args.random_seed)
 
     return args
 

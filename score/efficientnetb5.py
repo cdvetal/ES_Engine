@@ -1,11 +1,11 @@
 from scoreinterface import ScoreInterface
-import os
+
 from efficientnet.tfkeras import EfficientNetB5
 from efficientnet.tfkeras import preprocess_input
 
 
-class Scoring(ScoringInterface): 
-    def __init__(self, config):
+class Scoring(ScoreInterface):
+    def __init__(self):
         super(Scoring, self).__init__()
         self.model = EfficientNetB5(weights='imagenet')
 
