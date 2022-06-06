@@ -18,6 +18,12 @@ import torch
 import argparse
 from config import *
 
+from render.chars import CharsRenderer
+
+render_table = {
+    "chars": CharsRenderer,
+}
+
 
 def clip_fitness(individual):
     # global COUNT_IND, COUNT_GENERATION
@@ -31,15 +37,6 @@ def clip_fitness(individual):
         individual[:] = conditional_vector().cpu().detach().numpy().flatten()
     return float(result[2].float().cpu()) * -1,
     # return (float(result[0].float().cpu()) * -1) / 10000+ (float(result[1].float().cpu()) * -1)/10000  + (float(result[2].float().cpu()) * -1)*1,
-
-
-"""
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-creator.create("Individual", np.ndarray, fitness=creator.FitnessMax)
-
-toolbox = base.Toolbox()
-toolbox.register("evaluate", clip_fitness)
-"""
 
 
 def generate_individual_with_embeddings(batch_size):
@@ -71,7 +68,7 @@ def keras_fitness(ind, img_width, img_height):
 
     # build lists of images at all needed sizes
     img_array = chunks(ind)
-    img = RENDER_IMAGE(img_array, size=img_height)
+    img = RENDERER.render(img_array, size=img_height)
     for target_size in target_size_table:
         if target_size is None:
             imr = img
@@ -145,7 +142,8 @@ def main(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", clip_fitness)
-    strategy = cma.Strategy(centroid=generate_individual_with_embeddings(), sigma=0.2, lambda_=args.pop_size)
+    # strategy = cma.Strategy(centroid=generate_individual_with_embeddings(), sigma=0.2, lambda_=args.pop_size)
+    strategy = cma.Strategy(centroid=np.random.normal(0.5, .5, args.RENDERER.genotype_size), sigma=0.5, lambda_=POP_SIZE)
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -228,8 +226,6 @@ def setup_args():
 
     args.sub_folder = f"{args.n_gens}_{args.pop_size}"
 
-    print(args)
-
     if args.from_checkpoint:
         experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
         # save_folder = f"experiments/{experiment_name}"
@@ -266,6 +262,8 @@ def setup_args():
         # tf.compat.v1.set_random_seed(args.random_seed)
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
+
+    args.RENDERER = render_table[args.RENDERER]
 
     return args
 

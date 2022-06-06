@@ -3,8 +3,6 @@ IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square image
 NUM_LINES = 17
 NUM_COLS = 8
 
-RENDER_IMAGE = None
-
 SAVE_FOLDER = 'experiments'
 
 POP_SIZE = 10
