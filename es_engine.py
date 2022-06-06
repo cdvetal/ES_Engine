@@ -4,21 +4,17 @@ from datetime import datetime
 
 from PIL import Image
 import tensorflow as tf
-import torch
-from deap import gp, creator, base, tools, algorithms, cma
 
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import numpy as np
-"""
 from deap import base
 from deap import cma
 from deap import creator
 from deap import tools
 import torch
-"""
 import argparse
 from config import *
 
@@ -58,18 +54,11 @@ def generate_individual_with_embeddings(batch_size):
     return ind
 
 
-def evaluate_fitness(individual, args):
-    # TODO - Generate the phenotype
-    # TODO - Evaluate phenotype
-    # TODO - Calculate fitness
-    ind_array = np.array(individual)
-
 def keras_fitness(ind, img_width, img_height):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
         print("-> predictions reversed")
         do_score_reverse = True
-
 
     active_model_keys = sorted(ACTIVE_MODELS.keys())
 
@@ -88,7 +77,7 @@ def keras_fitness(ind, img_width, img_height):
             imr = img
         else:
             imr = img.resize(target_size, resample=Image.BILINEAR)
-        target_size_table[target_size].append(image.img_to_array(imr))
+        target_size_table[target_size].append(tf.keras.img_to_array(imr))
 
     # # convert all lists to np arrays
     for target_size in target_size_table:
