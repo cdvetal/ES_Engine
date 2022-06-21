@@ -1,12 +1,69 @@
 import csv
 import importlib
 import json
+import math
 import os
 import sys
 
 import numpy as np
 
 from config import model_groups
+
+
+def normalize(coord):
+    return Vector(
+        coord.x/coord.length(),
+        coord.y/coord.length()
+    )
+
+
+def perpendicular(coord):
+    # Shifts the angle by pi/2 and calculate the coordinates
+    # using the original vector length
+    return Vector(
+        coord.length()*math.cos(coord.angle()+math.pi/2),
+        coord.length()*math.sin(coord.angle()+math.pi/2)
+    )
+
+
+class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __sub__(self, other):
+        return Vector(self.x - other.x, self.y - other.y)
+
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def dot(self, other):
+        return self.x * other.x + self.y * other.y
+
+    def length(self):
+        # Returns the length of the vector
+        return math.sqrt(self.x**2 + self.y**2)
+
+    def angle(self):
+        # Returns the vector's angle
+        return math.atan2(self.y, self.x)
+
+    def norm(self):
+        return self.dot(self)**0.5
+
+    def normalized(self):
+        norm = self.norm()
+        return Vector(self.x / norm, self.y / norm)
+
+    def perp(self):
+        return Vector(1, -self.x / self.y)
+
+    def __mul__(self, scalar):
+        return Vector(self.x * scalar, self.y * scalar)
+
+    def __str__(self):
+        return f'({self.x}, {self.y})'
+
 
 
 def map_number(n, start1, stop1, start2, stop2):

@@ -3,6 +3,7 @@ class RenderingInterface:
 
     def __init__(self):
         self.genotype_size = 0
+        self.header_length = 1
 
     def load_model(self, config, checkpoint):
         pass

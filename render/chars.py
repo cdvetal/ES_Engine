@@ -12,7 +12,6 @@ class CharsRenderer(RenderingInterface):
     def __init__(self):
         super(RenderingInterface, self).__init__()
 
-        self.header_length = 1
         self.genotype_size = 8
 
     def render(self, a, img_size):
