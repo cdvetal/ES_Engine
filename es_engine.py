@@ -24,6 +24,8 @@ render_table = {
     "chars": CharsRenderer,
 }
 
+# TODO - IMAGENET_INDEXES is not initialized
+
 
 def clip_fitness(individual):
     # global COUNT_IND, COUNT_GENERATION
@@ -51,6 +53,11 @@ def generate_individual_with_embeddings(batch_size):
     return ind
 
 
+def chunks(array):
+    img = np.array(array)
+    return np.reshape(img, (NUM_LINES, NUM_COLS))
+
+
 def keras_fitness(ind, img_width, img_height):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
@@ -68,15 +75,15 @@ def keras_fitness(ind, img_width, img_height):
 
     # build lists of images at all needed sizes
     img_array = chunks(ind)
-    img = RENDERER.render(img_array, size=img_height)
+    img = RENDERER.render(img_array, img_size=img_height)
     for target_size in target_size_table:
         if target_size is None:
             imr = img
         else:
             imr = img.resize(target_size, resample=Image.BILINEAR)
-        target_size_table[target_size].append(tf.keras.img_to_array(imr))
+        target_size_table[target_size].append(tf.keras.utils.img_to_array(imr))
 
-    # # convert all lists to np arrays
+    # convert all lists to np arrays
     for target_size in target_size_table:
         target_size_table[target_size] = np.array(target_size_table[target_size])
 
@@ -106,7 +113,7 @@ def keras_fitness(ind, img_width, img_height):
                 worthy = preds['scores'][:, IMAGENET_INDEXES]
         else:
             worthy = preds[:, IMAGENET_INDEXES]
-        # print("Worthy {}: {}".format(k, np.array(worthy).shape))
+        print("Worthy {}: {}".format(k, np.array(worthy).shape))
         full_predictions.append(worthy)
         fitness_partials[k] = float(worthy)
 
@@ -194,7 +201,8 @@ def main(args):
             big_sleep_cma_es.save_individual_cond_vector(cond_vector,
                                                          f"{save_folder}/{sub_folder}/{experiment_name}_{gen}_best.png")
     """
-
+ACTIVE_MODELS = get_active_models_from_arg("vgg16")
+RENDERER = render_table["chars"]()
 
 def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
@@ -263,7 +271,7 @@ def setup_args():
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
 
-    args.RENDERER = render_table[args.RENDERER]
+    args.RENDERER = render_table[args.RENDERER]()
 
     return args
 
