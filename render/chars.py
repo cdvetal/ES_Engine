@@ -10,9 +10,12 @@ from utils import map_number
 
 class CharsRenderer(RenderingInterface):
     def __init__(self):
-        super(RenderingInterface, self).__init__()
+        super(CharsRenderer, self).__init__()
 
         self.genotype_size = 8
+
+    def __str__(self):
+        return "chars"
 
     def render(self, a, img_size):
         """

@@ -6,13 +6,16 @@ from renderinterface import RenderingInterface
 from utils import map_number
 
 
-class CharsRenderer(RenderingInterface):
+class PylinhasRenderer(RenderingInterface):
     def __init__(self):
-        super(RenderingInterface, self).__init__()
+        super(PylinhasRenderer, self).__init__()
 
         self.genotype_size = 8
 
-    def render(self, a, size):
+    def __str__(self):
+        return "pylinhas"
+
+    def render(self, a, img_size):
         # split input array into header and rest
         head = a[:self.header_length]
         rest = a[self.header_length:]
@@ -26,20 +29,20 @@ class CharsRenderer(RenderingInterface):
         # im = Image.new('RGB', (size, size), (R, G, B))
         # draw = ImageDraw.Draw(im, 'RGB')
 
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, size, size)
+        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
         cr = cairo.Context(ims)
 
         cr.set_source_rgba(R, G, B, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, size, size)  # define a recatangle and then fill it
+        cr.rectangle(0, 0, img_size, img_size)  # define a recatangle and then fill it
         cr.fill()
 
         # now draw lines
         if len(head[0]) > 8:
-            min_width = 0.004 * size
-            max_width = 0.04 * size
+            min_width = 0.004 * img_size
+            max_width = 0.04 * img_size
         else:
-            min_width = 0.0001 * size
-            max_width = 0.1 * size
+            min_width = 0.0001 * img_size
+            max_width = 0.1 * img_size
 
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
@@ -58,8 +61,8 @@ class CharsRenderer(RenderingInterface):
             # cr.set_line_width(1)
 
             for it in range(4, len(e) - 1, 2):
-                x = map_number(e[it], 0, 1, 0, size)
-                y = map_number(e[it + 1], 0, 1, 0, size)
+                x = map_number(e[it], 0, 1, 0, img_size)
+                y = map_number(e[it + 1], 0, 1, 0, img_size)
                 cr.line_to(x, y)
 
             cr.close_path()

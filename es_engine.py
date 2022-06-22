@@ -19,10 +19,18 @@ import argparse
 from config import *
 
 from render.chars import CharsRenderer
+from render.pylinhas import PylinhasRenderer
+from render.organic import OrganicRenderer
+from render.thinorg import ThinOrganicRenderer
 
 render_table = {
     "chars": CharsRenderer,
+    "pylinhas": PylinhasRenderer,
+    "organic": OrganicRenderer,
+    "thinorg": ThinOrganicRenderer,
 }
+
+# TODO - IMAGENET_INDEXES is not initialized
 
 
 def clip_fitness(individual):
@@ -51,7 +59,12 @@ def generate_individual_with_embeddings(batch_size):
     return ind
 
 
-def keras_fitness(ind, img_width, img_height):
+def chunks(array):
+    img = np.array(array)
+    return np.reshape(img, (NUM_LINES, NUM_COLS))
+
+
+def keras_fitness(ind, img_size):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
         print("-> predictions reversed")
@@ -68,15 +81,15 @@ def keras_fitness(ind, img_width, img_height):
 
     # build lists of images at all needed sizes
     img_array = chunks(ind)
-    img = RENDERER.render(img_array, size=img_height)
+    img = RENDERER.render(img_array, img_size=img_size)
     for target_size in target_size_table:
         if target_size is None:
             imr = img
         else:
             imr = img.resize(target_size, resample=Image.BILINEAR)
-        target_size_table[target_size].append(tf.keras.img_to_array(imr))
+        target_size_table[target_size].append(tf.keras.utils.img_to_array(imr))
 
-    # # convert all lists to np arrays
+    # convert all lists to np arrays
     for target_size in target_size_table:
         target_size_table[target_size] = np.array(target_size_table[target_size])
 
@@ -106,7 +119,7 @@ def keras_fitness(ind, img_width, img_height):
                 worthy = preds['scores'][:, IMAGENET_INDEXES]
         else:
             worthy = preds[:, IMAGENET_INDEXES]
-        # print("Worthy {}: {}".format(k, np.array(worthy).shape))
+        print("Worthy {}: {}".format(k, np.array(worthy).shape))
         full_predictions.append(worthy)
         fitness_partials[k] = float(worthy)
 
@@ -196,6 +209,12 @@ def main(args):
     """
 
 
+ACTIVE_MODELS = get_active_models_from_arg("vgg16")
+RENDERER = render_table["chars"]()
+class_mapping = open_class_mapping()
+IMAGENET_INDEXES = get_class_index_list(class_mapping, TARGET_CLASS)
+
+
 def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
 
@@ -249,9 +268,11 @@ def setup_args():
 
     class_mapping = open_class_mapping()
     if TARGET_CLASS is None or TARGET_CLASS == "none":
-        args.imagenet_indexes = None
+        IMAGENET_INDEXES = None
     else:
-        args.imagenet_indexes = get_class_index_list(class_mapping, TARGET_CLASS)
+        IMAGENET_INDEXES = get_class_index_list(class_mapping, TARGET_CLASS)
+
+    print(IMAGENET_INDEXES)
 
     if args.random_seed:
         print("Setting random seed: ", args.random_seed)
@@ -263,7 +284,7 @@ def setup_args():
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
 
-    args.RENDERER = render_table[args.RENDERER]
+    args.RENDERER = render_table[args.RENDERER]()
 
     return args
 
