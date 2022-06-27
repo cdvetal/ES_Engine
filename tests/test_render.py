@@ -7,6 +7,7 @@ from render.pylinhas import PylinhasRenderer
 from render.organic import OrganicRenderer
 
 from config import *
+from es_engine import setup_args
 from utils import get_active_models_from_arg
 
 renders = [ThinOrganicRenderer(), CharsRenderer(), PylinhasRenderer(), OrganicRenderer()]
@@ -18,7 +19,8 @@ for render in renders:
     img.save("images/img_{}.png".format(render))
 
 
+args = setup_args()
 values = torch.rand(NUM_LINES, NUM_COLS)
-r = keras_fitness(values, 256)
+r = keras_fitness(args, values)
 print(r)
 
