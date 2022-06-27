@@ -1,12 +1,13 @@
-IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
+# IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
+IMG_SIZE = 512
 
 NUM_LINES = 17
 NUM_COLS = 8
 
 SAVE_FOLDER = 'experiments'
 
-POP_SIZE = 10
-N_GENS = 2
+POP_SIZE = 20
+N_GENS = 100
 ELITISM = 1
 CXPB = 0.9
 MUTPB = 0.1
@@ -23,15 +24,12 @@ RANDOM_SEED = None
 CHECKPOINT_FREQ = 10
 FROM_CHECKPOINT = None  # None or "Experiment_name.pkl""
 
-NETWORKS = "mobilenet,mobilenetv2"
-ACTIVE_MODELS = None
-ACTIVE_MODELS_QUANTITY = None
+NETWORKS = "mobilenet"
 
 TARGET_CLASS = "goldfish"
 
-IMAGENET_INDEXES = None
-
 SAVE_ALL = False
+VERBOSE = False
 
 RENDERER = "pylinhas"
 

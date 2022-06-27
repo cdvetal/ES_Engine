@@ -13,7 +13,7 @@ class PylinhasRenderer(RenderingInterface):
         self.genotype_size = 8
 
     def __str__(self):
-        return "pylinhas"
+        return "Renderer: pylinhas"
 
     def render(self, a, img_size):
         # split input array into header and rest

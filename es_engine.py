@@ -3,6 +3,7 @@ import random
 from datetime import datetime
 
 from PIL import Image
+from PIL.Image import Resampling
 import tensorflow as tf
 
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
@@ -64,29 +65,29 @@ def chunks(array):
     return np.reshape(img, (NUM_LINES, NUM_COLS))
 
 
-def keras_fitness(ind, img_size):
+def keras_fitness(args, ind):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
         print("-> predictions reversed")
         do_score_reverse = True
 
-    active_model_keys = sorted(ACTIVE_MODELS.keys())
+    active_model_keys = sorted(args.active_models.keys())
 
     # build a table indexed by target_size for all resized image lists
     target_size_table = {}
     for k in active_model_keys:
-        model = ACTIVE_MODELS[k]
+        model = args.active_models[k]
         target_size = model.get_target_size()
         target_size_table[target_size] = []
 
     # build lists of images at all needed sizes
     img_array = chunks(ind)
-    img = RENDERER.render(img_array, img_size=img_size)
+    img = args.renderer.render(img_array, img_size=args.img_size)
     for target_size in target_size_table:
         if target_size is None:
             imr = img
         else:
-            imr = img.resize(target_size, resample=Image.BILINEAR)
+            imr = img.resize(target_size, resample=Resampling.BILINEAR)
         target_size_table[target_size].append(tf.keras.utils.img_to_array(imr))
 
     # convert all lists to np arrays
@@ -97,7 +98,7 @@ def keras_fitness(ind, img_size):
     full_predictions = []
     fitness_partials = {}
     for k in active_model_keys:
-        model = ACTIVE_MODELS[k]
+        model = args.active_models[k]
         target_size = model.get_target_size()
         image_preprocessor = model.get_input_preprocessor()
 
@@ -116,10 +117,10 @@ def keras_fitness(ind, img_size):
             elif preds['scores'].shape[1] == 1:
                 worthy = preds['scores']
             else:
-                worthy = preds['scores'][:, IMAGENET_INDEXES]
+                worthy = preds['scores'][:, args.imagenet_indexes]
         else:
-            worthy = preds[:, IMAGENET_INDEXES]
-        print("Worthy {}: {}".format(k, np.array(worthy).shape))
+            worthy = preds[:, args.imagenet_indexes]
+        # print("Worthy {}: {}".format(k, np.array(worthy).shape))
         full_predictions.append(worthy)
         fitness_partials[k] = float(worthy)
 
@@ -130,7 +131,7 @@ def keras_fitness(ind, img_size):
         full_predictions = 1.0 - full_predictions
     top_classes = np.argmax(full_predictions, axis=2).flatten()
     top_class = np.argmax(np.bincount(top_classes))
-    imagenet_index = IMAGENET_INDEXES[top_class]
+    imagenet_index = args.imagenet_indexes[top_class]
 
     prediction_list = np.sum(full_predictions, axis=2)
 
@@ -138,15 +139,11 @@ def keras_fitness(ind, img_size):
     rewards = np.sum(np.log(prediction_list + 1), axis=0)
     merged = np.dstack(prediction_list)[0]
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
-    return [(rewards[0],), fitness_partials]
+    # return [(rewards[0],), fitness_partials]
+    return [rewards[0]]
 
 
 def main(args):
-    print(args)
-
-    # The cma module uses the np random number generator
-    save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
-
     # The CMA-ES algorithm takes a population of one individual as argument
     # The centroid is set to a vector of 5.0 see http://www.lri.fr/~hansen/cmaes_inmatlab.html
     # for more details about the rastrigin and other tests for CMA-ES
@@ -154,9 +151,9 @@ def main(args):
     creator.create("Individual", np.ndarray, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
-    toolbox.register("evaluate", clip_fitness)
+    toolbox.register("evaluate", keras_fitness, args)
     # strategy = cma.Strategy(centroid=generate_individual_with_embeddings(), sigma=0.2, lambda_=args.pop_size)
-    strategy = cma.Strategy(centroid=np.random.normal(0.5, .5, args.RENDERER.genotype_size), sigma=0.5, lambda_=POP_SIZE)
+    strategy = cma.Strategy(centroid=np.random.normal(0.5, .5, args.num_cols * args.num_lines), sigma=0.5, lambda_=args.pop_size)
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -170,23 +167,22 @@ def main(args):
     logbook = tools.Logbook()
     logbook.header = "gen", "evals", "std", "min", "avg", "max"
 
-    """
-    for gen in range(N_GENS):
-        COUNT_GENERATION = gen
+    renderer = args.renderer
+
+    for gen in range(args.n_gens):
+        print("Generation:", gen)
         # Generate a new population
         population = toolbox.generate()
         # Evaluate the individuals
-        COUNT_IND = 0
-        COUNT_GENERATION = gen
         fitnesses = toolbox.map(toolbox.evaluate, population)
         for ind, fit in zip(population, fitnesses):
             ind.fitness.values = fit
 
-        if SAVE_ALL:
+        if args.save_all:
             for index, ind in enumerate(population):
-                cond_vector = big_sleep_cma_es.CondVectorParameters(np.array(ind), batch_size=BATCH_SIZE)
-                big_sleep_cma_es.save_individual_cond_vector(cond_vector,
-                                                             f"{save_folder}/{sub_folder}/{experiment_name}_{gen}_{index}.png")
+                img_array = chunks(ind)
+                img = renderer.render(img_array, img_size=args.img_size)
+                img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_{index}.png")
 
         # Update the strategy with the evaluated individuals
         toolbox.update(population)
@@ -201,19 +197,12 @@ def main(args):
             print(logbook.stream)
 
         if halloffame is not None:
-            save_gen_best(save_folder, sub_folder, experiment_name,
-                                      [gen, halloffame[0], halloffame[0].fitness.values, "_"])
-            cond_vector = big_sleep_cma_es.CondVectorParameters(np.array(halloffame[0]), batch_size=BATCH_SIZE)
-            big_sleep_cma_es.save_individual_cond_vector(cond_vector,
-                                                         f"{save_folder}/{sub_folder}/{experiment_name}_{gen}_best.png")
-    """
+            save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
+            img_array = chunks(halloffame[0])
+            img = renderer.render(img_array, img_size=args.img_size)
+            img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
-
-ACTIVE_MODELS = get_active_models_from_arg("vgg16")
-RENDERER = render_table["chars"]()
-class_mapping = open_class_mapping()
-IMAGENET_INDEXES = get_class_index_list(class_mapping, TARGET_CLASS)
-
+    print(logbook)
 
 def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
@@ -222,21 +211,16 @@ def setup_args():
     parser.add_argument('--save-folder', default="experiments", help="Directory to experiment outputs. Default is {}.".format(SAVE_FOLDER))
     parser.add_argument('--n-gens', default=N_GENS, type=int, help='Maximum generations. Default is {}.'.format(N_GENS))
     parser.add_argument('--pop-size', default=POP_SIZE, type=int, help='Population size. Default is {}.'.format(POP_SIZE))
-    parser.add_argument('--save-all', default=False, action='store_true', help='Save all Individual images. Default is False.')
-    parser.add_argument('--lamarck', default=False, action='store_true', help='Lamarckian evolution. Default is False.')
-    parser.add_argument('--verbose', default=False, action='store_true', help='Verbose. Default is False.')
+    parser.add_argument('--save-all', default=SAVE_ALL, action='store_true', help='Save all Individual images. Default is {}.'.format(SAVE_ALL))
+    parser.add_argument('--verbose', default=VERBOSE, action='store_true', help='Verbose. Default is {}.'.format(VERBOSE))
     parser.add_argument('--num-lines', default=NUM_LINES, type=int, help="Number of lines. Default is {}".format(NUM_LINES))
     parser.add_argument('--num-cols', default=NUM_COLS, type=int, help="Number of columns. Default is {}".format(NUM_COLS))
     parser.add_argument('--renderer', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
-    parser.add_argument('--img-size', default=IMG_SIZE[0], type=int, help='Image dimensions during testing. Default is {}.'.format(IMG_SIZE[0]))
+    parser.add_argument('--img-size', default=IMG_SIZE, type=int, help='Image dimensions during testing. Default is {}.'.format(IMG_SIZE))
     parser.add_argument('--target-class', default=TARGET_CLASS, help='which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
     parser.add_argument("--networks", default=NETWORKS, help="comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
     parser.add_argument('--target-fit', default=TARGET_FITNESS, type=float, help='target fitness stopping criteria. Default is {}.'.format(TARGET_FITNESS))
-    parser.add_argument('--checkpoint-freq', default=CHECKPOINT_FREQ, help='Checkpoint backup frequency. Default is every {} generations.'.format(CHECKPOINT_FREQ))
     parser.add_argument('--from-checkpoint', default=FROM_CHECKPOINT, help='Checkpoint file from which you want to continue evolving. Default is {}.'.format(FROM_CHECKPOINT))
-    parser.add_argument('--tournament-size', default=TOURNAMENT_SIZE, type=int, help='Tournament size for selection operator. Default is {}.'.format(TOURNAMENT_SIZE))
-    parser.add_argument('--cxpb', default=CXPB, type=float, help='Crossover probability. Default is {}.'.format(CXPB))
-    parser.add_argument('--mutpb', default=MUTPB, type=float, help='Mutation probability. Default is {}.'.format(MUTPB))
     parser.add_argument('--mut-mu', default=MUT_MU, type=float, help='Mean or python:sequence of means for the gaussian addition mutation. Default is {}.'.format(MUT_MU))
     parser.add_argument('--mut-sigma', default=MUT_SIGMA, type=float, help='Standard deviation or python:sequence of standard deviations for the gaussian addition mutation. Default is {}.'.format(MUT_SIGMA))
     parser.add_argument('--mut-indpb', default=MUT_INDPB, type=float, help='Independent probability for each attribute to be mutated. Default is {}.'.format(MUT_INDPB))
@@ -246,33 +230,30 @@ def setup_args():
     args.sub_folder = f"{args.n_gens}_{args.pop_size}"
 
     if args.from_checkpoint:
-        experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
+        args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
         # save_folder = f"experiments/{experiment_name}"
         # CHECKPOINT = f"{save_folder}/{CHECKPOINT}"
         # save_folder = "{}/{}".format(save_folder, experiment_name)
-        sub_folder = "from_checkpoint"
-        save_folder, sub_folder = create_save_folder(args.save_folder, sub_folder)
+        args.sub_folder = "from_checkpoint"
+        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
         args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
     else:
-        experiment_name = f"pylinhas_{args.renderer}_L{args.num_lines}_C{args.num_cols}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
-        sub_folder = f"{experiment_name}_{args.n_gens}_{args.pop_size}"
-        save_folder, sub_folder = create_save_folder(args.save_folder, sub_folder)
+        args.experiment_name = f"{args.renderer}_L{args.num_lines}_C{args.num_cols}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
+        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
 
-    ACTIVE_MODELS = get_active_models_from_arg(args.networks)
-    # ACTIVE_MODELS_QUANTITY = len(ACTIVE_MODELS.keys())
+    args.active_models = get_active_models_from_arg(args.networks)
+    args.active_models_quantity = len(args.active_models.keys())
 
-    for key, value in ACTIVE_MODELS.items():
-        pass
-        print("Key", key)
-        print("Model", value.model)
+    print("Loaded models:")
+    for key, value in args.active_models.items():
+        print("- ", key)
 
     class_mapping = open_class_mapping()
-    if TARGET_CLASS is None or TARGET_CLASS == "none":
-        IMAGENET_INDEXES = None
+    if args.target_class is None or args.target_class == "none":
+        args.imagenet_indexes = None
     else:
-        IMAGENET_INDEXES = get_class_index_list(class_mapping, TARGET_CLASS)
-
-    print(IMAGENET_INDEXES)
+        args.imagenet_indexes = get_class_index_list(class_mapping, args.target_class)
 
     if args.random_seed:
         print("Setting random seed: ", args.random_seed)
@@ -284,7 +265,7 @@ def setup_args():
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
 
-    args.RENDERER = render_table[args.RENDERER]()
+    args.renderer = render_table[args.renderer]()
 
     return args
 

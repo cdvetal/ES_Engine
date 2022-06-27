@@ -19,6 +19,6 @@ for render in renders:
 
 
 values = torch.rand(NUM_LINES, NUM_COLS)
-r = keras_fitness(values, 256, 256)
+r = keras_fitness(values, 256)
 print(r)
 
