@@ -5,6 +5,7 @@ from datetime import datetime
 from PIL import Image
 from PIL.Image import Resampling
 import tensorflow as tf
+import clip
 
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
@@ -16,6 +17,7 @@ from deap import cma
 from deap import creator
 from deap import tools
 import torch
+import torchvision.transforms as transforms
 import argparse
 from config import *
 
@@ -31,34 +33,7 @@ render_table = {
     "thinorg": ThinOrganicRenderer,
 }
 
-# TODO - IMAGENET_INDEXES is not initialized
-
-
-def clip_fitness(individual):
-    # global COUNT_IND, COUNT_GENERATION
-    ind_array = np.array(individual)
-    conditional_vector = big_sleep_cma_es.CondVectorParameters(ind_array, batch_size=BATCH_SIZE)  #
-    result = big_sleep_cma_es.evaluate_with_local_search(conditional_vector, 10)
-    # big_sleep.checkin_with_cond_vectors(result, conditional_vector, individual=COUNT_IND, itt=COUNT_GENERATION)
-    # COUNT_IND += 1
-    # print("Lamack", LAMARCK)
-    if LAMARCK:
-        individual[:] = conditional_vector().cpu().detach().numpy().flatten()
-    return float(result[2].float().cpu()) * -1,
-    # return (float(result[0].float().cpu()) * -1) / 10000+ (float(result[1].float().cpu()) * -1)/10000  + (float(result[2].float().cpu()) * -1)*1,
-
-
-def generate_individual_with_embeddings(batch_size):
-    latent = torch.nn.Parameter(torch.zeros(batch_size, 128).normal_(std=1).float().cuda())
-    params_other = torch.zeros(batch_size, 1000).normal_(-3.9, .3).cuda()
-    classes = torch.sigmoid(torch.nn.Parameter(params_other))
-    embed = big_sleep_cma_es.model.embeddings(classes)
-    cond_vector = torch.cat((latent, embed), dim=1)
-    ind = cond_vector.cpu().detach().numpy().flatten()
-    # cond_vector = big_sleep_cma_es.CondVectorParameters(ind, batch_size=BATCH_SIZE)
-    # big_sleep_cma_es.save_individual_cond_vector(cond_vector, f"PONTO_INICIAL.png")
-    return ind
-
+# TODO - Meter a funcionar sem classificadores
 
 def chunks(array):
     img = np.array(array)
@@ -138,9 +113,17 @@ def keras_fitness(args, ind):
     # extract rewards and merged
     rewards = np.sum(np.log(prediction_list + 1), axis=0)
     merged = np.dstack(prediction_list)[0]
+
+    # Calculate clip similarity
+    trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+    img_t = trans(img).unsqueeze(0)
+    image_features = args.clip.encode_image(img_t)
+    loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
+
+    final_value = ((loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
-    return [rewards[0]]
+    return [final_value]
 
 
 def main(args):
@@ -152,8 +135,7 @@ def main(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", keras_fitness, args)
-    # strategy = cma.Strategy(centroid=generate_individual_with_embeddings(), sigma=0.2, lambda_=args.pop_size)
-    strategy = cma.Strategy(centroid=np.random.normal(0.5, .5, args.num_cols * args.num_lines), sigma=0.5, lambda_=args.pop_size)
+    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.num_cols * args.num_lines), sigma=args.sigma, lambda_=args.pop_size)
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -221,9 +203,11 @@ def setup_args():
     parser.add_argument("--networks", default=NETWORKS, help="comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
     parser.add_argument('--target-fit', default=TARGET_FITNESS, type=float, help='target fitness stopping criteria. Default is {}.'.format(TARGET_FITNESS))
     parser.add_argument('--from-checkpoint', default=FROM_CHECKPOINT, help='Checkpoint file from which you want to continue evolving. Default is {}.'.format(FROM_CHECKPOINT))
-    parser.add_argument('--mut-mu', default=MUT_MU, type=float, help='Mean or python:sequence of means for the gaussian addition mutation. Default is {}.'.format(MUT_MU))
-    parser.add_argument('--mut-sigma', default=MUT_SIGMA, type=float, help='Standard deviation or python:sequence of standard deviations for the gaussian addition mutation. Default is {}.'.format(MUT_SIGMA))
-    parser.add_argument('--mut-indpb', default=MUT_INDPB, type=float, help='Independent probability for each attribute to be mutated. Default is {}.'.format(MUT_INDPB))
+    parser.add_argument('--init-mu', default=INIT_MU, type=float, help='Mean value for the initialization of the population. Default is {}.'.format(INIT_MU))
+    parser.add_argument('--init-sigma', default=INIT_SIGMA, type=float, help='Standard deviation value for the initialization of the population. Default is {}.'.format(INIT_SIGMA))
+    parser.add_argument('--sigma', default=SIGMA, type=float, help='The initial standard deviation of the distribution. Default is {}.'.format(SIGMA))
+    parser.add_argument('--clip-influence', default=CLIP_INFLUENCE, type=float, help='The influence CLIP has in the generation (0.0 - 1.0). Default is {}.'.format(CLIP_INFLUENCE))
+    parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
 
     args = parser.parse_args()
 
@@ -266,6 +250,15 @@ def setup_args():
         tf.random.set_seed(args.random_seed)
 
     args.renderer = render_table[args.renderer]()
+
+    if args.clip_influence > 0.0:
+        args.clip_influence = min(1.0, max(0.0, args.clip_influence)) # clip value to (0.0 - 1.0)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model, preprocess = clip.load(args.clip_model, device)
+        text_inputs = clip.tokenize([args.target_class])
+        args.text_features = model.encode_text(text_inputs)
+        args.clip = model
+        print("CLIP module loaded.")
 
     return args
 

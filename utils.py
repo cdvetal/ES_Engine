@@ -65,9 +65,11 @@ class Vector:
         return f'({self.x}, {self.y})'
 
 
-
 def map_number(n, start1, stop1, start2, stop2):
-    return ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2
+    # return ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2
+    n = max(start1, min(stop1, n))
+    n = ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2
+    return n
 
 
 def create_save_folder(save_folder, sub_folder):

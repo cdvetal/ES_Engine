@@ -1,32 +1,28 @@
 # IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
-IMG_SIZE = 512
+IMG_SIZE = 256
 
 NUM_LINES = 17
 NUM_COLS = 8
 
 SAVE_FOLDER = 'experiments'
 
-POP_SIZE = 20
-N_GENS = 100
-ELITISM = 1
-CXPB = 0.9
-MUTPB = 0.1
+POP_SIZE = 40
+N_GENS = 2
 # Parameters for Gaussian Mutation
-MUT_MU = 0
-MUT_SIGMA = 1
-MUT_INDPB = 0.2
-
-TOURNAMENT_SIZE = 5
+INIT_MU = 0.5
+INIT_SIGMA = 0.25
+SIGMA = 0.2
 
 TARGET_FITNESS = 0.999
 RANDOM_SEED = None
 
-CHECKPOINT_FREQ = 10
 FROM_CHECKPOINT = None  # None or "Experiment_name.pkl""
 
 NETWORKS = "mobilenet"
+CLIP_INFLUENCE = 1.0
+CLIP_MODEL = 'ViT-B/32'
 
-TARGET_CLASS = "goldfish"
+TARGET_CLASS = "birdhouse"
 
 SAVE_ALL = False
 VERBOSE = False
