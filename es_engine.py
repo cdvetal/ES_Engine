@@ -35,6 +35,7 @@ render_table = {
 
 # TODO - Meter a funcionar sem classificadores
 
+
 def chunks(array):
     img = np.array(array)
     return np.reshape(img, (NUM_LINES, NUM_COLS))
@@ -104,15 +105,15 @@ def keras_fitness(args, ind):
     if do_score_reverse:
         print("-> Applying predictions reversed")
         full_predictions = 1.0 - full_predictions
-    top_classes = np.argmax(full_predictions, axis=2).flatten()
-    top_class = np.argmax(np.bincount(top_classes))
-    imagenet_index = args.imagenet_indexes[top_class]
+    # top_classes = np.argmax(full_predictions, axis=2).flatten()
+    # top_class = np.argmax(np.bincount(top_classes))
+    # imagenet_index = args.imagenet_indexes[top_class]
 
     prediction_list = np.sum(full_predictions, axis=2)
 
     # extract rewards and merged
     rewards = np.sum(np.log(prediction_list + 1), axis=0)
-    merged = np.dstack(prediction_list)[0]
+    # merged = np.dstack(prediction_list)[0]
 
     # Calculate clip similarity
     trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
@@ -199,9 +200,9 @@ def setup_args():
     parser.add_argument('--num-cols', default=NUM_COLS, type=int, help="Number of columns. Default is {}".format(NUM_COLS))
     parser.add_argument('--renderer', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
     parser.add_argument('--img-size', default=IMG_SIZE, type=int, help='Image dimensions during testing. Default is {}.'.format(IMG_SIZE))
-    parser.add_argument('--target-class', default=TARGET_CLASS, help='which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
-    parser.add_argument("--networks", default=NETWORKS, help="comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
-    parser.add_argument('--target-fit', default=TARGET_FITNESS, type=float, help='target fitness stopping criteria. Default is {}.'.format(TARGET_FITNESS))
+    parser.add_argument('--target-class', default=TARGET_CLASS, help='Which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
+    parser.add_argument("--networks", default=NETWORKS, help="Comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
+    parser.add_argument('--target-fit', default=TARGET_FITNESS, type=float, help='Target fitness stopping criteria. Default is {}.'.format(TARGET_FITNESS))
     parser.add_argument('--from-checkpoint', default=FROM_CHECKPOINT, help='Checkpoint file from which you want to continue evolving. Default is {}.'.format(FROM_CHECKPOINT))
     parser.add_argument('--init-mu', default=INIT_MU, type=float, help='Mean value for the initialization of the population. Default is {}.'.format(INIT_MU))
     parser.add_argument('--init-sigma', default=INIT_SIGMA, type=float, help='Standard deviation value for the initialization of the population. Default is {}.'.format(INIT_SIGMA))
