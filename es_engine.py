@@ -34,11 +34,9 @@ render_table = {
     "thinorg": ThinOrganicRenderer,
 }
 
-# TODO - Meter a funcionar sem classificadores
-
-def chunks(array):
+def chunks(args, array):
     img = np.array(array)
-    return np.reshape(img, (NUM_LINES, NUM_COLS))
+    return np.reshape(img, (args.num_lines, args.renderer.genotype_size))
 
 
 def keras_fitness(args, ind):
@@ -47,7 +45,6 @@ def keras_fitness(args, ind):
         print("-> predictions reversed")
         do_score_reverse = True
 
-    """
     active_model_keys = sorted(args.active_models.keys())
 
     # build a table indexed by target_size for all resized image lists
@@ -56,12 +53,11 @@ def keras_fitness(args, ind):
         model = args.active_models[k]
         target_size = model.get_target_size()
         target_size_table[target_size] = []
-    """
 
     # build lists of images at all needed sizes
-    img_array = chunks(ind)
+    img_array = chunks(args, ind)
     img = args.renderer.render(img_array, img_size=args.img_size)
-    """
+
     for target_size in target_size_table:
         if target_size is None:
             imr = img
@@ -108,24 +104,25 @@ def keras_fitness(args, ind):
     if do_score_reverse:
         print("-> Applying predictions reversed")
         full_predictions = 1.0 - full_predictions
-    top_classes = np.argmax(full_predictions, axis=2).flatten()
-    top_class = np.argmax(np.bincount(top_classes))
-    imagenet_index = args.imagenet_indexes[top_class]
+    if np.size(full_predictions):
+        top_classes = np.argmax(full_predictions, axis=2).flatten()
+        top_class = np.argmax(np.bincount(top_classes))
+        imagenet_index = args.imagenet_indexes[top_class]
 
-    prediction_list = np.sum(full_predictions, axis=2)
+        prediction_list = np.sum(full_predictions, axis=2)
 
-    # extract rewards and merged
-    rewards = np.sum(np.log(prediction_list + 1), axis=0)
-    merged = np.dstack(prediction_list)[0]
-    """
+        # extract rewards and merged
+        rewards = np.sum(np.log(prediction_list + 1), axis=0)
+        merged = np.dstack(prediction_list)[0]
+    else:
+        rewards = [0.0]
+
     # Calculate clip similarity
     trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     img_t = trans(img).unsqueeze(0)
     image_features = args.clip.encode_image(img_t)
-    # loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
-    loss = -F.mse_loss(args.text_features, image_features).item()
+    loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
 
-    rewards = [0.0]
     final_value = ((loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -141,7 +138,7 @@ def main(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", keras_fitness, args)
-    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.num_cols * args.num_lines), sigma=args.sigma, lambda_=args.pop_size)
+    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.genotype_size * args.num_lines), sigma=args.sigma, lambda_=args.pop_size)
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -186,7 +183,7 @@ def main(args):
 
         if halloffame is not None:
             save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
-            img_array = chunks(halloffame[0])
+            img_array = chunks(args, halloffame[0])
             img = renderer.render(img_array, img_size=args.img_size)
             img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
@@ -202,7 +199,6 @@ def setup_args():
     parser.add_argument('--save-all', default=SAVE_ALL, action='store_true', help='Save all Individual images. Default is {}.'.format(SAVE_ALL))
     parser.add_argument('--verbose', default=VERBOSE, action='store_true', help='Verbose. Default is {}.'.format(VERBOSE))
     parser.add_argument('--num-lines', default=NUM_LINES, type=int, help="Number of lines. Default is {}".format(NUM_LINES))
-    parser.add_argument('--num-cols', default=NUM_COLS, type=int, help="Number of columns. Default is {}".format(NUM_COLS))
     parser.add_argument('--renderer', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
     parser.add_argument('--img-size', default=IMG_SIZE, type=int, help='Image dimensions during testing. Default is {}.'.format(IMG_SIZE))
     parser.add_argument('--target-class', default=TARGET_CLASS, help='which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
@@ -228,7 +224,7 @@ def setup_args():
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
         args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
     else:
-        args.experiment_name = f"{args.renderer}_L{args.num_lines}_C{args.num_cols}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        args.experiment_name = f"{args.renderer}_L{args.num_lines}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
         args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
 
@@ -259,6 +255,11 @@ def setup_args():
 
     if args.clip_influence > 0.0:
         args.clip_influence = min(1.0, max(0.0, args.clip_influence)) # clip value to (0.0 - 1.0)
+        # If no models to guide the evolution use clip at fullest
+        if args.active_models_quantity == 0:
+            args.clip_influence = 1.0
+            print("No active model, CLIP influence changed to 1.0")
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model, preprocess = clip.load(args.clip_model, device)
         text_inputs = clip.tokenize([args.target_class])

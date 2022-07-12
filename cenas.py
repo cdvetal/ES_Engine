@@ -1,4 +1,7 @@
-import clip
+from utils import Vector, normalize, perpendicular
 
-c = clip.available_models()
-print(c)
+a = Vector(0.0, 0.0)
+print(a.length())
+a = normalize(a)
+print(a)
+

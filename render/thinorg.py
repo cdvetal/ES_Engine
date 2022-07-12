@@ -35,8 +35,8 @@ class ThinOrganicRenderer(RenderingInterface):
         ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
         cr = cairo.Context(ims)
 
-        cr.set_source_rgba(R, G, B, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, img_size, img_size)  # define a recatangle and then fill it
+        cr.set_source_rgba(R, G, B, 1.0)  # everything on cairo appears to be between 0 and 1
+        cr.rectangle(0, 0, img_size, img_size)  # define a rectangle and then fill it
         cr.fill()
 
         # now draw lines
