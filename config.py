@@ -6,8 +6,8 @@ NUM_COLS = 8
 
 SAVE_FOLDER = 'experiments'
 
-POP_SIZE = 40
-N_GENS = 2
+POP_SIZE = 50
+N_GENS = 100
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25

@@ -18,6 +18,7 @@ from deap import creator
 from deap import tools
 import torch
 import torchvision.transforms as transforms
+import torch.nn.functional as F
 import argparse
 from config import *
 
@@ -46,6 +47,7 @@ def keras_fitness(args, ind):
         print("-> predictions reversed")
         do_score_reverse = True
 
+    """
     active_model_keys = sorted(args.active_models.keys())
 
     # build a table indexed by target_size for all resized image lists
@@ -54,10 +56,12 @@ def keras_fitness(args, ind):
         model = args.active_models[k]
         target_size = model.get_target_size()
         target_size_table[target_size] = []
+    """
 
     # build lists of images at all needed sizes
     img_array = chunks(ind)
     img = args.renderer.render(img_array, img_size=args.img_size)
+    """
     for target_size in target_size_table:
         if target_size is None:
             imr = img
@@ -113,13 +117,15 @@ def keras_fitness(args, ind):
     # extract rewards and merged
     rewards = np.sum(np.log(prediction_list + 1), axis=0)
     merged = np.dstack(prediction_list)[0]
-
+    """
     # Calculate clip similarity
     trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     img_t = trans(img).unsqueeze(0)
     image_features = args.clip.encode_image(img_t)
-    loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
+    # loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
+    loss = -F.mse_loss(args.text_features, image_features).item()
 
+    rewards = [0.0]
     final_value = ((loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
