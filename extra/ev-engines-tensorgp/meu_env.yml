@@ -1,9 +1,0 @@
-name: nevargpu
-channels:
-  - defaults
-dependencies:
-  - cudatoolkit=11.3.1=h59b6b97_2
-  - cudnn=8.2.1=cuda11.3_0
-  - vc=14.2=h21ff451_1
-  - vs2015_runtime=14.27.29016=h5e58377_2
-prefix: C:\Users\macha\.conda\envs\nevargpu

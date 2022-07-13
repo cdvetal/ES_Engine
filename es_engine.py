@@ -18,7 +18,6 @@ from deap import creator
 from deap import tools
 import torch
 import torchvision.transforms as transforms
-import torch.nn.functional as F
 import argparse
 from config import *
 
@@ -33,6 +32,7 @@ render_table = {
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
 }
+
 
 def chunks(args, array):
     img = np.array(array)

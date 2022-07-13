@@ -82,7 +82,6 @@ class OrganicRenderer(RenderingInterface):
 
             B = Vector(b.x, b.y)
             AB = B - A
-            print(AB)
             AB_perp_normed = perpendicular(normalize(AB))
             a1 = A + AB_perp_normed * w1
             a2 = A - AB_perp_normed * w1
@@ -91,7 +90,6 @@ class OrganicRenderer(RenderingInterface):
 
             C = Vector(c.x, c.y)
             CD = D - C
-            print(CD)
             CD_perp_normed = perpendicular(normalize(CD))
             c1 = C + CD_perp_normed * w2
             c2 = C - CD_perp_normed * w2

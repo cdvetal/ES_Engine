@@ -6,9 +6,10 @@ import re
 import io
 from PIL import Image
 import numpy as np
-from scoreinterface import ScoringInterface
 
 import boto3
+
+from scoreinterface import ScoreInterface
 
 boto_client = None
 min_api_score = 0.1
@@ -16,7 +17,7 @@ min_api_score = 0.1
 import sys
 
 
-class Scoring(ScoringInterface):
+class Scoring(ScoreInterface):
     pos_labels = []
     neg_labels = []
 

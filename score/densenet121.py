@@ -1,8 +1,8 @@
-from scoreinterface import ScoringInterface
-import tensorflow.keras as keras
+from scoreinterface import ScoreInterface
+from tensorflow import keras
 
 
-class Scoring(ScoringInterface): 
+class Scoring(ScoreInterface):
     def __init__(self):
         super(Scoring, self).__init__()
         self.model = keras.applications.densenet.DenseNet121()
