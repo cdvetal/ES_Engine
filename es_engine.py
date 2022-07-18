@@ -33,6 +33,8 @@ render_table = {
     "thinorg": ThinOrganicRenderer,
 }
 
+# TODO - Use GPU if available
+
 
 def chunks(args, array):
     img = np.array(array)
@@ -260,8 +262,7 @@ def setup_args():
             args.clip_influence = 1.0
             print("No active model, CLIP influence changed to 1.0")
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model, preprocess = clip.load(args.clip_model, device)
+        model, preprocess = clip.load(args.clip_model, "cpu")
         text_inputs = clip.tokenize([args.target_class])
         args.text_features = model.encode_text(text_inputs)
         args.clip = model

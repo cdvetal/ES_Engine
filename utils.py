@@ -155,24 +155,6 @@ def helpful_interface_message_exit(model_interface, e):
     sys.exit(1)
 
 
-def load_scoring_object(render_name):
-    render_class_name = "RenderingInterface"
-    render_module_name = render_name
-    # print("Loading {} class from {}".format(model_class_name, model_module_name))
-    try:
-        render_class = getattr(importlib.import_module(render_module_name), render_class_name)
-    except ImportError:
-        try:
-            # fallback: try loading from "scoring" subdirectory of library path (todo: default/enforce?)
-            # print("isto é meu    "+model_module_name)
-            render_class = getattr(importlib.import_module("render." + render_module_name), render_class_name)
-        except ImportError as e:
-            helpful_interface_message_exit(render_module_name, e)
-    # print("class loaded.")
-    scoring_object = render_class()
-    return scoring_object
-
-
 def load_scoring_object(network_name):
     model_class_name = "Scoring"
     model_module_name = network_name
