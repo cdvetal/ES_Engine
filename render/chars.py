@@ -9,10 +9,14 @@ from utils import map_number
 
 
 class CharsRenderer(RenderingInterface):
-    def __init__(self):
-        super(CharsRenderer, self).__init__()
+    def __init__(self, args):
+        super(CharsRenderer, self).__init__(args)
 
-        self.genotype_size = 8
+        self.genotype_size = 8 * args.num_lines
+
+    def chunks(self, array):
+        img = np.array(array)
+        return np.reshape(img, (self.args.num_lines, self.genotype_size))
 
     def __str__(self):
         return "chars"

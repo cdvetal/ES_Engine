@@ -36,11 +36,6 @@ render_table = {
 # TODO - Use GPU if available
 
 
-def chunks(args, array):
-    img = np.array(array)
-    return np.reshape(img, (args.num_lines, args.renderer.genotype_size))
-
-
 def keras_fitness(args, ind):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
@@ -57,7 +52,7 @@ def keras_fitness(args, ind):
         target_size_table[target_size] = []
 
     # build lists of images at all needed sizes
-    img_array = chunks(args, ind)
+    img_array = args.renderer.chunks(args, ind)
     img = args.renderer.render(img_array, img_size=args.img_size)
 
     for target_size in target_size_table:
@@ -140,7 +135,7 @@ def main(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", keras_fitness, args)
-    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.genotype_size * args.num_lines), sigma=args.sigma, lambda_=args.pop_size)
+    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.genotype_size), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -167,7 +162,7 @@ def main(args):
 
         if args.save_all:
             for index, ind in enumerate(population):
-                img_array = chunks(ind)
+                img_array = renderer.chunks(ind)
                 img = renderer.render(img_array, img_size=args.img_size)
                 img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_{index}.png")
 
@@ -185,11 +180,12 @@ def main(args):
 
         if halloffame is not None:
             save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
-            img_array = chunks(args, halloffame[0])
+            img_array = renderer.chunks(args, halloffame[0])
             img = renderer.render(img_array, img_size=args.img_size)
             img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
     print(logbook)
+
 
 def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
@@ -203,7 +199,7 @@ def setup_args():
     parser.add_argument('--num-lines', default=NUM_LINES, type=int, help="Number of lines. Default is {}".format(NUM_LINES))
     parser.add_argument('--renderer', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
     parser.add_argument('--img-size', default=IMG_SIZE, type=int, help='Image dimensions during testing. Default is {}.'.format(IMG_SIZE))
-    parser.add_argument('--target-class', default=TARGET_CLASS, help='which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
+    parser.add_argument('--target-class', default=TARGET_CLASS, help='Which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
     parser.add_argument("--networks", default=NETWORKS, help="comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
     parser.add_argument('--target-fit', default=TARGET_FITNESS, type=float, help='target fitness stopping criteria. Default is {}.'.format(TARGET_FITNESS))
     parser.add_argument('--from-checkpoint', default=FROM_CHECKPOINT, help='Checkpoint file from which you want to continue evolving. Default is {}.'.format(FROM_CHECKPOINT))
@@ -212,6 +208,7 @@ def setup_args():
     parser.add_argument('--sigma', default=SIGMA, type=float, help='The initial standard deviation of the distribution. Default is {}.'.format(SIGMA))
     parser.add_argument('--clip-influence', default=CLIP_INFLUENCE, type=float, help='The influence CLIP has in the generation (0.0 - 1.0). Default is {}.'.format(CLIP_INFLUENCE))
     parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
+    parser.add_argument('--clip-prompts', default=TARGET_CLASS, help='CLIP prompts to use for the generation. Default is the target class')
 
     args = parser.parse_args()
 
@@ -229,6 +226,7 @@ def setup_args():
         args.experiment_name = f"{args.renderer}_L{args.num_lines}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
         args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
+        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
 
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())
@@ -253,17 +251,23 @@ def setup_args():
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
 
-    args.renderer = render_table[args.renderer]()
+    args.renderer = render_table[args.renderer](args)
 
     if args.clip_influence > 0.0:
-        args.clip_influence = min(1.0, max(0.0, args.clip_influence)) # clip value to (0.0 - 1.0)
+        args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
         # If no models to guide the evolution use clip at fullest
         if args.active_models_quantity == 0:
             args.clip_influence = 1.0
             print("No active model, CLIP influence changed to 1.0")
 
         model, preprocess = clip.load(args.clip_model, "cpu")
-        text_inputs = clip.tokenize([args.target_class])
+
+        # If no clip prompts are given use the target class, else use the provided prompts
+        if args.clip_prompts is None:
+            text_inputs = clip.tokenize([args.target_class])
+        else:
+            text_inputs = clip.tokenize(args.clip_prompts)
+
         args.text_features = model.encode_text(text_inputs)
         args.clip = model
         print("CLIP module loaded.")

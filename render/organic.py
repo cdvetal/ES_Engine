@@ -9,10 +9,14 @@ from utils import map_number, Vector, perpendicular, normalize
 
 
 class OrganicRenderer(RenderingInterface):
-    def __init__(self):
-        super(OrganicRenderer, self).__init__()
+    def __init__(self, args):
+        super(OrganicRenderer, self).__init__(args)
 
-        self.genotype_size = 13
+        self.genotype_size = 13 * args.num_lines
+
+    def chunks(self, array):
+        img = np.array(array)
+        return np.reshape(img, (self.args.num_lines, self.genotype_size))
 
     def __str__(self):
         return "organic"

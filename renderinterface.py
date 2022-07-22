@@ -1,7 +1,8 @@
 class RenderingInterface:
     model = None
 
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         self.genotype_size = 0
         self.header_length = 1
 
