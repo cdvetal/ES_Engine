@@ -10,7 +10,8 @@ class PylinhasRenderer(RenderingInterface):
     def __init__(self, args):
         super(PylinhasRenderer, self).__init__(args)
 
-        self.genotype_size = 8 * args.num_lines
+        self.genotype_size = 8
+        self.real_genotype_size = self.genotype_size * args.num_lines
 
     def chunks(self, array):
         img = np.array(array)

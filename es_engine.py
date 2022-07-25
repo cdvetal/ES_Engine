@@ -25,15 +25,18 @@ from render.chars import CharsRenderer
 from render.pylinhas import PylinhasRenderer
 from render.organic import OrganicRenderer
 from render.thinorg import ThinOrganicRenderer
+from render.vqgan import VQGANRenderer
 
 render_table = {
     "chars": CharsRenderer,
     "pylinhas": PylinhasRenderer,
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
+    "vqgan": VQGANRenderer
 }
 
 # TODO - Use GPU if available
+# TODO - Experiment with VQGAN
 
 
 def keras_fitness(args, ind):
@@ -52,7 +55,7 @@ def keras_fitness(args, ind):
         target_size_table[target_size] = []
 
     # build lists of images at all needed sizes
-    img_array = args.renderer.chunks(args, ind)
+    img_array = args.renderer.chunks(ind)
     img = args.renderer.render(img_array, img_size=args.img_size)
 
     for target_size in target_size_table:
@@ -101,7 +104,8 @@ def keras_fitness(args, ind):
     if do_score_reverse:
         print("-> Applying predictions reversed")
         full_predictions = 1.0 - full_predictions
-    if np.size(full_predictions):
+
+    if np.size(full_predictions): # Check if there are prediction, only happens when no network is specified
         top_classes = np.argmax(full_predictions, axis=2).flatten()
         top_class = np.argmax(np.bincount(top_classes))
         imagenet_index = args.imagenet_indexes[top_class]
@@ -135,7 +139,7 @@ def main(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", keras_fitness, args)
-    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.genotype_size), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
+    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.real_genotype_size), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -180,7 +184,7 @@ def main(args):
 
         if halloffame is not None:
             save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
-            img_array = renderer.chunks(args, halloffame[0])
+            img_array = renderer.chunks(halloffame[0])
             img = renderer.render(img_array, img_size=args.img_size)
             img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 

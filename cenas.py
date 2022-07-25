@@ -1,7 +1,15 @@
-from utils import Vector, normalize, perpendicular
+from es_engine import setup_args
+from render.vqgan import VQGANRenderer
+import torch
 
-a = Vector(0.0, 0.0)
-print(a.length())
-a = normalize(a)
-print(a)
+args = setup_args()
 
+vq_gan_renderer = VQGANRenderer(args)
+
+t = torch.randn(*vq_gan_renderer.z_shape)
+
+img = vq_gan_renderer.render(t, 128)
+
+print(img)
+
+img.save("image.png")

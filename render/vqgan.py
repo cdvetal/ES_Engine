@@ -8,9 +8,10 @@ from omegaconf import OmegaConf
 from PIL import Image
 import requests
 from taming.models import cond_transformer, vqgan
+import torchvision
 
 from renderinterface import RenderingInterface
-from utils import map_number, Vector, perpendicular, normalize
+from utils import map_number, Vector, perpendicular, normalize, create_save_folder
 
 
 def wget_file(url, out):
@@ -19,6 +20,31 @@ def wget_file(url, out):
     except subprocess.CalledProcessError as cpe:
         output = cpe.output
         print("Ignoring non-zero exit: ", output)
+
+
+class ReplaceGrad(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x_forward, x_backward):
+        ctx.shape = x_backward.shape
+        return x_forward
+
+    @staticmethod
+    def backward(ctx, grad_in):
+        return None, grad_in.sum_to_size(ctx.shape)
+
+
+class ClampWithGrad(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input, min, max):
+        ctx.min = min
+        ctx.max = max
+        ctx.save_for_backward(input)
+        return input.clamp(min, max)
+
+    @staticmethod
+    def backward(ctx, grad_in):
+        input, = ctx.saved_tensors
+        return grad_in * (grad_in * (input - input.clamp(ctx.min, ctx.max)) >= 0), None, None
 
 
 vqgan_config_table = {
@@ -33,6 +59,7 @@ vqgan_config_table = {
     "wikiart_16384m": 'http://mirror.io.community/blob/vqgan/wikiart_16384.yaml',
     "sflckr": 'https://heibox.uni-heidelberg.de/d/73487ab6e5314cb5adba/files/?p=%2Fconfigs%2F2020-11-09T13-31-51-project.yaml&dl=1',
 }
+
 vqgan_checkpoint_table = {
     "imagenet_f16_1024": 'http://mirror.io.community/blob/vqgan/vqgan_imagenet_f16_1024.ckpt',
     "imagenet_f16_16384": 'https://heibox.uni-heidelberg.de/d/a7530b09fed84f80a887/files/?p=%2Fckpts%2Flast.ckpt&dl=1',
@@ -51,14 +78,15 @@ class VQGANRenderer(RenderingInterface):
     def __init__(self, args):
         super(VQGANRenderer, self).__init__(args)
 
-        self.genotype_size = 13 * args.num_lines
-
+        main_path = 'models'
         vqgan_model = 'imagenet_f16_16384'
-        config_path = f'models/vqgan_{vqgan_model}.yaml'
-        checkpoint_path = f'models/vqgan_{vqgan_model}.ckpt'
+        config_path = f'{main_path}/vqgan_{vqgan_model}.yaml'
+        checkpoint_path = f'{main_path}/vqgan_{vqgan_model}.ckpt'
 
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         print('Using device:', self.device)
+
+        create_save_folder(main_path, '')
 
         wget_file(vqgan_config_table[vqgan_model], config_path)
         wget_file(vqgan_checkpoint_table[vqgan_model], checkpoint_path)
@@ -83,15 +111,37 @@ class VQGANRenderer(RenderingInterface):
         one_hot = F.one_hot(torch.randint(n_toks, [toksY * toksX], device=self.device), n_toks).float()
         z = one_hot @ self.model.quantize.embedding.weight
 
-        print(z.shape)
+        z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
+        self.z_shape = z.shape
+
+        self.genotype_size = torch.numel(z)
+        self.real_genotype_size = self.genotype_size
+
+        print(self.z_shape, self.genotype_size)
+
+        self.replace_grad = ReplaceGrad.apply
+        self.clamp_with_grad = ClampWithGrad.apply
+
+        self.to_pil = torchvision.transforms.ToPILImage()
+
 
     def chunks(self, array):
         img = np.array(array)
-        return np.reshape(img, (self.args.num_lines, self.genotype_size))
+        return np.reshape(img, self.z_shape)
+
+
+    def vector_quantize(self, x, codebook):
+        d = x.pow(2).sum(dim=-1, keepdim=True) + codebook.pow(2).sum(dim=1) - 2 * x @ codebook.T
+        indices = d.argmin(-1)
+        x_q = F.one_hot(indices, codebook.shape[0]).to(d.dtype) @ codebook
+        return self.replace_grad(x_q, x)
 
     def __str__(self):
-        return "organic"
+        return "VQGAN"
 
     def render(self, a, img_size):
-        pass
+        z_q = self.vector_quantize(a.movedim(1, 3), self.model.quantize.embedding.weight).movedim(3, 1)
+        out = self.clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
+
+        return self.to_pil(out.squeeze(0))
 
