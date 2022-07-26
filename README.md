@@ -18,11 +18,11 @@ The numpy array ind is a variable list of vectors and img_size is the dimensions
 The VQGAN renderer is a special case of renderer. It is used to generate images using the VQ-VAE (Vector Quantized Variational Autoencoder) model, so its genotype_size is calculated based on the multiplication of the shape of the VQ-GAN input size, which is then reshaped and used as input to the model.
 
 ### Current renderers
-- pylinhas - Draws using a set of colored lines
-- chars - Draws using characters
-- organic - Draws using organic shapes
-- thinorg - Similar to organic but with thinner lines
-- vqgan - Using the VQ-VAE model to generate images
+- **pylinhas** - Draws using a set of colored lines
+- **chars** - Draws using characters
+- **organic** - Draws using organic shapes
+- **thinorg** - Similar to organic but with thinner lines
+- **vqgan** - Using the VQ-VAE model to generate images
 
 
 ## Scoring system
