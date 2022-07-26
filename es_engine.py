@@ -105,7 +105,7 @@ def keras_fitness(args, ind):
         print("-> Applying predictions reversed")
         full_predictions = 1.0 - full_predictions
 
-    if np.size(full_predictions): # Check if there are prediction, only happens when no network is specified
+    if np.size(full_predictions):  # Check if there are prediction, only happens when no network is specified
         top_classes = np.argmax(full_predictions, axis=2).flatten()
         top_class = np.argmax(np.bincount(top_classes))
         imagenet_index = args.imagenet_indexes[top_class]
