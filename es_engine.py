@@ -118,11 +118,14 @@ def keras_fitness(args, ind):
     else:
         rewards = [0.0]
 
-    # Calculate clip similarity
-    trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    img_t = trans(img).unsqueeze(0)
-    image_features = args.clip.encode_image(img_t)
-    loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
+    if args.clip_influence > 0.0:
+        # Calculate clip similarity
+        trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+        img_t = trans(img).unsqueeze(0)
+        image_features = args.clip.encode_image(img_t)
+        loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
+    else:
+        loss = 0.0
 
     final_value = ((loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
@@ -265,6 +268,8 @@ def setup_args():
             print("No active model, CLIP influence changed to 1.0")
 
         model, preprocess = clip.load(args.clip_model, "cpu")
+
+        print(args.clip_prompts)
 
         # If no clip prompts are given use the target class, else use the provided prompts
         if args.clip_prompts is None:
