@@ -25,18 +25,15 @@ from render.chars import CharsRenderer
 from render.pylinhas import PylinhasRenderer
 from render.organic import OrganicRenderer
 from render.thinorg import ThinOrganicRenderer
-from render.vqgan import VQGANRenderer
 
 render_table = {
     "chars": CharsRenderer,
     "pylinhas": PylinhasRenderer,
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
-    "vqgan": VQGANRenderer
 }
 
 # TODO - Use GPU if available
-# TODO - Experiment with VQGAN
 
 
 def keras_fitness(args, ind):

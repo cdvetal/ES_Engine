@@ -5,8 +5,8 @@ NUM_LINES = 17
 
 SAVE_FOLDER = 'experiments'
 
-POP_SIZE = 2
-N_GENS = 2
+POP_SIZE = 40
+N_GENS = 100
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25
@@ -17,11 +17,11 @@ RANDOM_SEED = None
 
 FROM_CHECKPOINT = None  # None or "Experiment_name.pkl""
 
-NETWORKS = "vgg16,vgg19,mobilenetv2"
+NETWORKS = "vgg16,mobilenetv2"  # mobilenet,vgg16
 CLIP_INFLUENCE = 0.0
 CLIP_MODEL = 'ViT-B/32'
 
-TARGET_CLASS = "tick"
+TARGET_CLASS = "birdhouse"
 
 SAVE_ALL = False
 VERBOSE = False
