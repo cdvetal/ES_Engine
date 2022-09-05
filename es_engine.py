@@ -3,7 +3,6 @@ import random
 from datetime import datetime
 
 from PIL import Image
-from PIL.Image import Resampling
 import tensorflow as tf
 import clip
 
@@ -57,7 +56,7 @@ def calculate_fitness(args, ind):
         if target_size is None:
             imr = img
         else:
-            imr = img.resize(target_size, resample=Resampling.BILINEAR)
+            imr = img.resize(target_size, resample=Image.BILINEAR)
         target_size_table[target_size].append(tf.keras.utils.img_to_array(imr))
 
     # convert all lists to np arrays
