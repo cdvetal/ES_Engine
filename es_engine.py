@@ -259,9 +259,9 @@ def setup_args():
 
         # If no clip prompts are given use the target class, else use the provided prompts
         if args.clip_prompts is None:
-            text_inputs = clip.tokenize([args.target_class])
+            text_inputs = clip.tokenize([args.target_class]).to(args.device)
         else:
-            text_inputs = clip.tokenize(args.clip_prompts)
+            text_inputs = clip.tokenize(args.clip_prompts).to(args.device)
 
         args.text_features = model.encode_text(text_inputs)
         args.clip = model
