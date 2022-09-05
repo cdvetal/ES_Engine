@@ -116,7 +116,7 @@ def calculate_fitness(args, ind):
     if args.clip_influence > 0.0:
         # Calculate clip similarity
         trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        img_t = trans(img).unsqueeze(0) #.to(args.device)
+        img_t = trans(img).unsqueeze(0).to(args.device)
         image_features = args.clip.encode_image(img_t)
         loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
     else:
