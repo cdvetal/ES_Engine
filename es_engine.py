@@ -33,9 +33,6 @@ render_table = {
     "thinorg": ThinOrganicRenderer,
 }
 
-# TODO - Use GPU if available
-# TODO - Quando clip e usado 1.0 tirar modelos
-
 
 def keras_fitness(args, ind):
     do_score_reverse = False
@@ -119,7 +116,7 @@ def keras_fitness(args, ind):
     if args.clip_influence > 0.0:
         # Calculate clip similarity
         trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        img_t = trans(img).unsqueeze(0)
+        img_t = trans(img).unsqueeze(0).to(args.device)
         image_features = args.clip.encode_image(img_t)
         loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
     else:
@@ -239,6 +236,8 @@ def setup_args():
 
     args.renderer = render_table[args.renderer](args)
 
+    args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())
 
@@ -254,7 +253,7 @@ def setup_args():
 
         print(f"Loading CLIP model: {args.clip_model}")
 
-        model, preprocess = clip.load(args.clip_model, "cpu")
+        model, preprocess = clip.load(args.clip_model, device=args.device)
 
         print(f"Using \"{args.clip_prompts}\" as prompt to CLIP.")
 

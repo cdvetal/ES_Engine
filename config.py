@@ -19,7 +19,7 @@ FROM_CHECKPOINT = None  # None or "Experiment_name.pkl""
 
 NETWORKS = "mobilenetv2"  # mobilenet,vgg16
 CLIP_INFLUENCE = 0.0
-CLIP_MODEL = 'ViT-B/32'
+CLIP_MODEL = "ViT-B/32"
 
 TARGET_CLASS = "birdhouse"
 
