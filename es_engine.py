@@ -267,6 +267,7 @@ def setup_args():
         print("CLIP module loaded.")
 
         if args.clip_influence == 1.0:
+            print("CLIP influence as 1.0. Models removed.")
             args.active_models = {}
 
     if args.from_checkpoint:
