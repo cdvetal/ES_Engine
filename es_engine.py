@@ -34,7 +34,7 @@ render_table = {
 }
 
 
-def keras_fitness(args, ind):
+def calculate_fitness(args, ind):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
         print("-> predictions reversed")
@@ -116,7 +116,7 @@ def keras_fitness(args, ind):
     if args.clip_influence > 0.0:
         # Calculate clip similarity
         trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        img_t = trans(img).unsqueeze(0).to(args.device)
+        img_t = trans(img).unsqueeze(0) #.to(args.device)
         image_features = args.clip.encode_image(img_t)
         loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
     else:
@@ -136,7 +136,7 @@ def main(args):
     creator.create("Individual", np.ndarray, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
-    toolbox.register("evaluate", keras_fitness, args)
+    toolbox.register("evaluate", calculate_fitness, args)
     strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.real_genotype_size), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
