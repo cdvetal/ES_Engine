@@ -18,7 +18,7 @@ class PylinhasRenderer(RenderingInterface):
         return np.reshape(img, (self.args.num_lines, self.genotype_size))
 
     def __str__(self):
-        return "Renderer: pylinhas"
+        return "pylinhas"
 
     def render(self, a, img_size):
         # split input array into header and rest

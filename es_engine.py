@@ -34,6 +34,7 @@ render_table = {
 }
 
 # TODO - Use GPU if available
+# TODO - Quando clip e usado 1.0 tirar modelos
 
 
 def keras_fitness(args, ind):
@@ -188,6 +189,10 @@ def main(args):
             img = renderer.render(img_array, img_size=args.img_size)
             img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
+        if halloffame[0].fitness.values[0] >= args.target_fit:
+            print("Reached target fitness.\nExiting")
+            break
+
     print(logbook)
 
 
@@ -216,29 +221,6 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.sub_folder = f"{args.n_gens}_{args.pop_size}"
-
-    if args.from_checkpoint:
-        args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
-        # save_folder = f"experiments/{experiment_name}"
-        # CHECKPOINT = f"{save_folder}/{CHECKPOINT}"
-        # save_folder = "{}/{}".format(save_folder, experiment_name)
-        args.sub_folder = "from_checkpoint"
-        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
-        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
-    else:
-        args.experiment_name = f"{args.renderer}_L{args.num_lines}_{args.target_class}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
-        args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
-        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
-        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
-
-    args.active_models = get_active_models_from_arg(args.networks)
-    args.active_models_quantity = len(args.active_models.keys())
-
-    print("Loaded models:")
-    for key, value in args.active_models.items():
-        print("- ", key)
-
     class_mapping = open_class_mapping()
     if args.target_class is None or args.target_class == "none":
         args.imagenet_indexes = None
@@ -257,16 +239,24 @@ def setup_args():
 
     args.renderer = render_table[args.renderer](args)
 
+    args.active_models = get_active_models_from_arg(args.networks)
+    args.active_models_quantity = len(args.active_models.keys())
+
+    print("Loaded models:")
+    for key, value in args.active_models.items():
+        print("- ", key)
+
     if args.clip_influence > 0.0:
         args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
-        # If no models to guide the evolution use clip at fullest
-        if args.active_models_quantity == 0:
-            args.clip_influence = 1.0
-            print("No active model, CLIP influence changed to 1.0")
+
+        if args.clip_model not in clip.available_models():
+            args.clip_model = "ViT-B/32"
+
+        print(f"Loading CLIP model: {args.clip_model}")
 
         model, preprocess = clip.load(args.clip_model, "cpu")
 
-        print(args.clip_prompts)
+        print(f"Using \"{args.clip_prompts}\" as prompt to CLIP.")
 
         # If no clip prompts are given use the target class, else use the provided prompts
         if args.clip_prompts is None:
@@ -277,6 +267,23 @@ def setup_args():
         args.text_features = model.encode_text(text_inputs)
         args.clip = model
         print("CLIP module loaded.")
+
+        if args.clip_influence == 1.0:
+            args.active_models = {}
+
+    if args.from_checkpoint:
+        args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
+        # save_folder = f"experiments/{experiment_name}"
+        # CHECKPOINT = f"{save_folder}/{CHECKPOINT}"
+        # save_folder = "{}/{}".format(save_folder, experiment_name)
+        args.sub_folder = "from_checkpoint"
+        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
+        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
+    else:
+        args.experiment_name = f"{args.renderer}_L{args.num_lines}_{args.target_class}_CLIP{args.clip_influence}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
+        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
+        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
 
     return args
 
