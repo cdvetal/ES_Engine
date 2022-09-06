@@ -1,4 +1,5 @@
 import os
+import pickle
 import random
 from datetime import datetime
 
@@ -26,6 +27,7 @@ from render.pylinhas import PylinhasRenderer
 from render.organic import OrganicRenderer
 from render.thinorg import ThinOrganicRenderer
 from render.pixel import PixelRenderer
+from render.vqgan import VQGANRenderer
 
 render_table = {
     "chars": CharsRenderer,
@@ -33,6 +35,7 @@ render_table = {
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
     "pixel": PixelRenderer,
+    "vqgan": VQGANRenderer,
 }
 
 
@@ -192,6 +195,14 @@ def main(args):
             print("Reached target fitness.\nExiting")
             break
 
+        if gen % args.checkpoint_freq == 0:
+            # Fill the dictionary using the dict(key=value[, ...]) constructor
+            cp = dict(population=population, generation=gen, halloffame=halloffame, logbook=logbook,
+                      np_rndstate=np.random.get_state(), rndstate=random.getstate())
+            with open("{}/{}/{}_checkpoint.pkl".format(args.save_folder, args.sub_folder, args.experiment_name), "wb") as cp_file:
+                pickle.dump(cp, cp_file)
+        # print(time.time() - start)
+
     print(logbook)
 
 
@@ -203,6 +214,7 @@ def setup_args():
     parser.add_argument('--n-gens', default=N_GENS, type=int, help='Maximum generations. Default is {}.'.format(N_GENS))
     parser.add_argument('--pop-size', default=POP_SIZE, type=int, help='Population size. Default is {}.'.format(POP_SIZE))
     parser.add_argument('--save-all', default=SAVE_ALL, action='store_true', help='Save all Individual images. Default is {}.'.format(SAVE_ALL))
+    parser.add_argument('--checkpoint-freq', default=CHECKPOINT_FREQ, type=int, help='Checkpoint save frequency. Default is {}.'.format(CHECKPOINT_FREQ))
     parser.add_argument('--verbose', default=VERBOSE, action='store_true', help='Verbose. Default is {}.'.format(VERBOSE))
     parser.add_argument('--num-lines', default=NUM_LINES, type=int, help="Number of lines. Default is {}".format(NUM_LINES))
     parser.add_argument('--renderer', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
