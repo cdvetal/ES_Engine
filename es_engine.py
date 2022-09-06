@@ -8,10 +8,11 @@ from PIL.Image import Resampling
 import tensorflow as tf
 import clip
 
+from render.clipdraw import ClipDrawRenderer
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
 
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import numpy as np
 from deap import base
 from deap import cma
@@ -36,6 +37,7 @@ render_table = {
     "thinorg": ThinOrganicRenderer,
     "pixel": PixelRenderer,
     "vqgan": VQGANRenderer,
+    "clipdraw": ClipDrawRenderer,
 }
 
 

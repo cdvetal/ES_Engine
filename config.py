@@ -6,8 +6,8 @@ NUM_LINES = 17
 SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
-POP_SIZE = 40
-N_GENS = 100
+POP_SIZE = 2
+N_GENS = 2
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25
@@ -27,8 +27,7 @@ TARGET_CLASS = "birdhouse"
 SAVE_ALL = False
 VERBOSE = False
 
-# RENDERER = "pylinhas"
-RENDERER = "vqgan"
+RENDERER = "clipdraw"
 
 model_groups = {
     "london,": "xception,vgg16,vgg19,resnet50,resnet50v2,resnet101,resnet152,resnet101v2,resnet152v2,inceptionv3,inceptionresnetv2,mobilenet,mobilenetv2,densenet121,densenet169,densenet201,nasnet,nasnetmobile,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7,",

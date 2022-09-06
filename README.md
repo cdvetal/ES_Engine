@@ -30,6 +30,10 @@ The scoring system is based on the use of pre-trained classifiers. Each classifi
 - Create virtual environment: ```python3 -m venv env```
 - Activate virtual environment: ```source env/bin/activate```
 - Install dependencies: ```pip install -r requirements.txt```
+- It might be necessary additional steps before installing the requirements:
+  - Install pycairo dependencies: ```sudo apt install libcairo2-dev pkg-config python3-dev```
+  - Install wheel package: ```pip install wheel```
+  - Install gcc: ```sudo apt-get install gcc```
 
 ## Usage
 This tool is able to work without any arguments as they have a predefined configuration file where all the required information is stored. However, using the command line arguments it is possible to change these values.
