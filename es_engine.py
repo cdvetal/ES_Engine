@@ -3,6 +3,7 @@ import random
 from datetime import datetime
 
 from PIL import Image
+from PIL.Image import Resampling
 import tensorflow as tf
 import clip
 
@@ -24,12 +25,14 @@ from render.chars import CharsRenderer
 from render.pylinhas import PylinhasRenderer
 from render.organic import OrganicRenderer
 from render.thinorg import ThinOrganicRenderer
+from render.pixel import PixelRenderer
 
 render_table = {
     "chars": CharsRenderer,
     "pylinhas": PylinhasRenderer,
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
+    "pixel": PixelRenderer,
 }
 
 
@@ -56,7 +59,7 @@ def calculate_fitness(args, ind):
         if target_size is None:
             imr = img
         else:
-            imr = img.resize(target_size, resample=Image.BILINEAR)
+            imr = img.resize(target_size, resample=Resampling.BILINEAR)
         target_size_table[target_size].append(tf.keras.utils.img_to_array(imr))
 
     # convert all lists to np arrays

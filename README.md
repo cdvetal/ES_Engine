@@ -98,11 +98,6 @@ Number of lines. Default is 17. Example:
 
 ```python es_engine --num-lines 5```
 
-### --num-cols
-Number of columns. Default is 8. Example:
-
-```python es_engine --num-cols 5```
-
 ### --renderer
 Choose the renderer algorithm. Default is 'pylinhas'. Example:
 
