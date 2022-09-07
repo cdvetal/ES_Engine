@@ -57,7 +57,7 @@ class PylinhasRenderer(RenderingInterface):
             R = e[0]
             G = e[1]
             B = e[2]
-            w = map_number(e[4], 0, 1, min_width, max_width)
+            w = map_number(e[3], 0, 1, min_width, max_width)
 
             cr.set_source_rgb(R, G, B)
             # line width

@@ -12,7 +12,7 @@ class ClipDrawRenderer(RenderingInterface):
     def __init__(self, args):
         super(ClipDrawRenderer, self).__init__(args)
 
-        self.genotype_size = 11
+        self.genotype_size = 12
         self.real_genotype_size = self.genotype_size * args.num_lines
 
     def chunks(self, array):
@@ -46,21 +46,29 @@ class ClipDrawRenderer(RenderingInterface):
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
 
-        radius = 0.05
+        radius = 0.2
+
+        min_width = 0.0005 * img_size
+        max_width = 0.05 * img_size
 
         for e in rest:
             R = e[0]
             G = e[1]
             B = e[2]
 
-            p0 = (e[3], e[4])
-            p1 = (p0[0] + radius * (e[5] - 0.5), p0[1] + radius * (e[6] - 0.5))
-            p2 = (p1[0] + radius * (e[7] - 0.5), p1[1] + radius * (e[8] - 0.5))
-            p3 = (p2[0] + radius * (e[9] - 0.5), p2[1] + radius * (e[10] - 0.5))
+            w = map_number(e[3], 0, 1, min_width, max_width)
 
             cr.set_source_rgb(R, G, B)
-            cr.move_to(p0[0], p0[1])
-            cr.curve_to(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1])
+            # line width
+            cr.set_line_width(w)
+
+            p0 = (e[4], e[5])
+            p1 = (p0[0] + radius * (e[6] - 0.5), p0[1] + radius * (e[7] - 0.5))
+            p2 = (p1[0] + radius * (e[8] - 0.5), p1[1] + radius * (e[9] - 0.5))
+            p3 = (p2[0] + radius * (e[10] - 0.5), p2[1] + radius * (e[11] - 0.5))
+
+            cr.move_to(p0[0] * img_size, p0[1] * img_size)
+            cr.curve_to(p1[0] * img_size, p1[1] * img_size, p2[0] * img_size, p2[1] * img_size, p3[0] * img_size, p3[1] * img_size)
 
             cr.stroke()
 
