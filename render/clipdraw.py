@@ -46,10 +46,10 @@ class ClipDrawRenderer(RenderingInterface):
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
 
-        radius = 0.2
+        radius = 0.1
 
-        min_width = 0.0005 * img_size
-        max_width = 0.05 * img_size
+        max_width = 2.0 * img_size / 100
+        min_width = 0.5 * img_size / 100
 
         for e in rest:
             R = e[0]

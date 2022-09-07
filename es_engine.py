@@ -125,11 +125,18 @@ def calculate_fitness(args, ind):
         trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
         img_t = trans(img).unsqueeze(0).to(args.device)
         image_features = args.clip.encode_image(img_t)
-        loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
-    else:
-        loss = 0.0
+        text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
 
-    final_value = ((loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
+        if args.image_features:
+            image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1).item()
+
+    else:
+        text_clip_loss = 0.0
+
+    final_value = ((text_clip_loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
+
+    if args.image_features:
+        final_value = (final_value + image_clip_loss) / 2
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
     return [final_value]
@@ -212,7 +219,7 @@ def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
 
     parser.add_argument('--random-seed', default=RANDOM_SEED, type=int, help='Use a specific random seed (for repeatability). Default is {}.'.format(RANDOM_SEED))
-    parser.add_argument('--save-folder', default="experiments", help="Directory to experiment outputs. Default is {}.".format(SAVE_FOLDER))
+    parser.add_argument('--save-folder', default=SAVE_FOLDER, help="Directory to experiment outputs. Default is {}.".format(SAVE_FOLDER))
     parser.add_argument('--n-gens', default=N_GENS, type=int, help='Maximum generations. Default is {}.'.format(N_GENS))
     parser.add_argument('--pop-size', default=POP_SIZE, type=int, help='Population size. Default is {}.'.format(POP_SIZE))
     parser.add_argument('--save-all', default=SAVE_ALL, action='store_true', help='Save all Individual images. Default is {}.'.format(SAVE_ALL))
@@ -231,6 +238,7 @@ def setup_args():
     parser.add_argument('--clip-influence', default=CLIP_INFLUENCE, type=float, help='The influence CLIP has in the generation (0.0 - 1.0). Default is {}.'.format(CLIP_INFLUENCE))
     parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
     parser.add_argument('--clip-prompts', default=TARGET_CLASS, help='CLIP prompts to use for the generation. Default is the target class')
+    parser.add_argument('--input-image', default=None, help='Image to use as input.')
 
     args = parser.parse_args()
 
@@ -286,6 +294,17 @@ def setup_args():
         if args.clip_influence == 1.0:
             print("CLIP influence as 1.0. Models removed.")
             args.active_models = {}
+
+    if args.input_image:
+        if os.path.exists(args.input_image):
+            if not args.clip:
+                args.clip_model = "ViT-B/32"
+                model, preprocess = clip.load(args.clip_model, device=args.device)
+                args.clip = model
+
+            args.image_features = args.clip.encode_image(args.input_image)
+        else:
+            print("Image file does not exist.")
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
