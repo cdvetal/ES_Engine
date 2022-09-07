@@ -127,15 +127,19 @@ def calculate_fitness(args, ind):
         image_features = args.clip.encode_image(img_t)
         text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
 
-        if args.image_features:
-            image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1).item()
-
     else:
         text_clip_loss = 0.0
 
+    if args.input_image:
+        # Calculate clip similarity
+        trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+        img_t = trans(img).unsqueeze(0).to(args.device)
+        image_features = args.clip.encode_image(img_t)
+        image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1).item()
+
     final_value = ((text_clip_loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
 
-    if args.image_features:
+    if args.input_image:
         final_value = (final_value + image_clip_loss) / 2
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -269,6 +273,7 @@ def setup_args():
     for key, value in args.active_models.items():
         print("- ", key)
 
+    args.clip = None
     if args.clip_influence > 0.0:
         args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
 
@@ -302,7 +307,8 @@ def setup_args():
                 model, preprocess = clip.load(args.clip_model, device=args.device)
                 args.clip = model
 
-            args.image_features = args.clip.encode_image(args.input_image)
+            image = preprocess(Image.open(args.input_image)).unsqueeze(0).to(args.device)
+            args.image_features = args.clip.encode_image(image)
         else:
             print("Image file does not exist.")
 
