@@ -79,7 +79,7 @@ class VQGANRenderer(RenderingInterface):
         super(VQGANRenderer, self).__init__(args)
 
         main_path = 'models'
-        vqgan_model = 'imagenet_f16_16384'
+        vqgan_model = 'imagenet_f16_1024'
         config_path = f'{main_path}/vqgan_{vqgan_model}.yaml'
         checkpoint_path = f'{main_path}/vqgan_{vqgan_model}.ckpt'
 
@@ -123,7 +123,6 @@ class VQGANRenderer(RenderingInterface):
         self.clamp_with_grad = ClampWithGrad.apply
 
         self.to_pil = torchvision.transforms.ToPILImage()
-
 
     def chunks(self, array):
         img = np.array(array)
