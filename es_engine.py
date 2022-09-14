@@ -265,6 +265,7 @@ def setup_args():
     args.renderer = render_table[args.renderer](args)
 
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("Using device:", args.device)
 
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())
