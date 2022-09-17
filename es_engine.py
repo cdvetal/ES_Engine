@@ -2,6 +2,7 @@ import os
 import pickle
 import random
 from datetime import datetime
+from time import time
 
 from PIL import Image
 from PIL.Image import Resampling
@@ -330,5 +331,16 @@ def setup_args():
 
 
 if __name__ == "__main__":
+    start_time_total = time()
     args = setup_args()
+    start_time_evo = time()
     main(args)
+    end_time = time()
+
+    total_time = (end_time - start_time_total)
+    evo_time = (end_time - start_time_evo)
+
+    print("-"*20)
+    print("Evolution elapsed time:", evo_time)
+    print("Total elapsed time:", total_time)
+    print("-" * 20)
