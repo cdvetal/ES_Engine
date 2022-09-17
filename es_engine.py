@@ -331,16 +331,21 @@ def setup_args():
 
 
 if __name__ == "__main__":
+    # Get time of start of the program
     start_time_total = time()
+    # Get arguments
     args = setup_args()
+    # Get time of start of the evolution
     start_time_evo = time()
+    # Main program
     main(args)
+    # Get end time
     end_time = time()
 
     total_time = (end_time - start_time_total)
     evo_time = (end_time - start_time_evo)
 
-    print("-"*20)
-    print("Evolution elapsed time:", evo_time)
-    print("Total elapsed time:", total_time)
+    print("-" * 20)
+    print("Evolution elapsed time: {:.3f}".format(evo_time))
+    print("Total elapsed time: {:.3f}".format(total_time))
     print("-" * 20)
