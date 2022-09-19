@@ -2,12 +2,14 @@ import os
 import pickle
 import random
 from datetime import datetime
+from time import time
 
 from PIL import Image
 from PIL.Image import Resampling
 import tensorflow as tf
 import clip
 
+from render.biggan import BigGANRenderer
 from render.clipdraw import ClipDrawRenderer
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
@@ -23,12 +25,7 @@ import torchvision.transforms as transforms
 import argparse
 from config import *
 
-from render.chars import CharsRenderer
-from render.pylinhas import PylinhasRenderer
-from render.organic import OrganicRenderer
-from render.thinorg import ThinOrganicRenderer
-from render.pixel import PixelRenderer
-from render.vqgan import VQGANRenderer
+from render import *
 
 render_table = {
     "chars": CharsRenderer,
@@ -38,6 +35,7 @@ render_table = {
     "pixel": PixelRenderer,
     "vqgan": VQGANRenderer,
     "clipdraw": ClipDrawRenderer,
+    "biggan": BigGANRenderer,
 }
 
 
@@ -262,10 +260,10 @@ def setup_args():
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
 
-    args.renderer = render_table[args.renderer](args)
-
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Using device:", args.device)
+
+    args.renderer = render_table[args.renderer](args)
 
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())
@@ -331,5 +329,21 @@ def setup_args():
 
 
 if __name__ == "__main__":
+    # Get time of start of the program
+    start_time_total = time()
+    # Get arguments
     args = setup_args()
+    # Get time of start of the evolution
+    start_time_evo = time()
+    # Main program
     main(args)
+    # Get end time
+    end_time = time()
+
+    total_time = (end_time - start_time_total)
+    evo_time = (end_time - start_time_evo)
+
+    print("-" * 20)
+    print("Evolution elapsed time: {:.3f}".format(evo_time))
+    print("Total elapsed time: {:.3f}".format(total_time))
+    print("-" * 20)

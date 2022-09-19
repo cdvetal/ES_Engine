@@ -1,23 +1,22 @@
-import math
-
 import cairo
 import numpy as np
 from PIL import Image
 
 from renderinterface import RenderingInterface
-from utils import map_number
 
 
 class PixelRenderer(RenderingInterface):
     def __init__(self, args):
         super(PixelRenderer, self).__init__(args)
 
+        self.num_lines = args.num_lines
+
         self.genotype_size = 3
-        self.real_genotype_size = self.genotype_size * args.num_lines
+        self.real_genotype_size = self.genotype_size * (args.num_lines * args.num_lines)
 
     def chunks(self, array):
         img = np.array(array)
-        return np.reshape(img, (self.args.num_lines, self.genotype_size))
+        return np.reshape(img, ((self.num_lines * self.num_lines), self.genotype_size))
 
     def __str__(self):
         return "pixel"
@@ -30,7 +29,7 @@ class PixelRenderer(RenderingInterface):
         cr.rectangle(0, 0, img_size, img_size)  # define a rectangle and then fill it
         cr.fill()
 
-        width = img_size / math.sqrt(self.args.num_lines)
+        width = img_size / self.args.num_lines
         x = 0
         y = 0
         for r in a:
