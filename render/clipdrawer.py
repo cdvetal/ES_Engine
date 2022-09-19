@@ -1,5 +1,3 @@
-import math
-
 import cairo
 import numpy as np
 from PIL import Image
@@ -20,7 +18,7 @@ class ClipDrawRenderer(RenderingInterface):
         return np.reshape(img, (self.args.num_lines, self.genotype_size))
 
     def __str__(self):
-        return "clipdraw"
+        return "clipdrawer"
 
     def render(self, a, img_size):
         # split input array into header and rest

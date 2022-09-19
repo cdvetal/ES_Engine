@@ -10,7 +10,7 @@ import tensorflow as tf
 import clip
 
 from render.biggan import BigGANRenderer
-from render.clipdraw import ClipDrawRenderer
+from render.clipdrawer import ClipDrawRenderer
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
 

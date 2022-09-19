@@ -4,3 +4,4 @@ from .organic import OrganicRenderer
 from .thinorg import ThinOrganicRenderer
 from .pixel import PixelRenderer
 from .vqgan import VQGANRenderer
+from .clipdrawer import ClipDrawRenderer
