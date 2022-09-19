@@ -9,6 +9,7 @@ from PIL.Image import Resampling
 import tensorflow as tf
 import clip
 
+from render.biggan import BigGANRenderer
 from render.clipdraw import ClipDrawRenderer
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
@@ -24,12 +25,7 @@ import torchvision.transforms as transforms
 import argparse
 from config import *
 
-from render.chars import CharsRenderer
-from render.pylinhas import PylinhasRenderer
-from render.organic import OrganicRenderer
-from render.thinorg import ThinOrganicRenderer
-from render.pixel import PixelRenderer
-from render.vqgan import VQGANRenderer
+from render import *
 
 render_table = {
     "chars": CharsRenderer,
@@ -39,6 +35,7 @@ render_table = {
     "pixel": PixelRenderer,
     "vqgan": VQGANRenderer,
     "clipdraw": ClipDrawRenderer,
+    "biggan": BigGANRenderer,
 }
 
 
@@ -263,9 +260,9 @@ def setup_args():
         # TODO: Confirm this works
         tf.random.set_seed(args.random_seed)
 
-    args.renderer = render_table[args.renderer](args)
-
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    args.renderer = render_table[args.renderer](args)
 
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())
