@@ -10,8 +10,10 @@ class ClipDrawRenderer(RenderingInterface):
     def __init__(self, args):
         super(ClipDrawRenderer, self).__init__(args)
 
-        self.genotype_size = 12
-        self.real_genotype_size = self.genotype_size * args.num_lines
+        self.num_lines = args.num_lines
+
+        self.genotype_size = ((3 * 6) + 7)  # 3 segments, 6 values each, plus color (4), width (1), starting point (2)
+        self.real_genotype_size = self.genotype_size * self.num_lines
 
     def chunks(self, array):
         img = np.array(array)
@@ -44,8 +46,6 @@ class ClipDrawRenderer(RenderingInterface):
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
 
-        radius = 0.1
-
         max_width = 2.0 * img_size / 100
         min_width = 0.5 * img_size / 100
 
@@ -53,22 +53,33 @@ class ClipDrawRenderer(RenderingInterface):
             R = e[0]
             G = e[1]
             B = e[2]
+            A = e[3]
 
-            w = map_number(e[3], 0, 1, min_width, max_width)
+            w = map_number(e[4], 0, 1, min_width, max_width)
 
-            cr.set_source_rgb(R, G, B)
+            cr.set_source_rgba(R, G, B, A)
             # line width
             cr.set_line_width(w)
 
-            p0 = (e[4], e[5])
-            p1 = (p0[0] + radius * (e[6] - 0.5), p0[1] + radius * (e[7] - 0.5))
-            p2 = (p1[0] + radius * (e[8] - 0.5), p1[1] + radius * (e[9] - 0.5))
-            p3 = (p2[0] + radius * (e[10] - 0.5), p2[1] + radius * (e[11] - 0.5))
+            num_segments = 3
+            p0 = (e[5], e[6])
 
-            cr.move_to(p0[0] * img_size, p0[1] * img_size)
-            cr.curve_to(p1[0] * img_size, p1[1] * img_size, p2[0] * img_size, p2[1] * img_size, p3[0] * img_size, p3[1] * img_size)
+            ind = 7
+            for j in range(num_segments):
+                radius = 0.1
+                p1 = (p0[0] + radius * (e[ind] - 0.5), p0[1] + radius * (e[ind + 1] - 0.5))
+                p2 = (p1[0] + radius * (e[ind + 2] - 0.5), p1[1] + radius * (e[ind + 3] - 0.5))
+                p3 = (p2[0] + radius * (e[ind + 4] - 0.5), p2[1] + radius * (e[ind + 5] - 0.5))
 
-            cr.stroke()
+                ind += 6
+
+                cr.move_to(p0[0] * img_size, p0[1] * img_size)
+                cr.curve_to(p1[0] * img_size, p1[1] * img_size, p2[0] * img_size, p2[1] * img_size, p3[0] * img_size,
+                            p3[1] * img_size)
+
+                cr.stroke()
+
+                p0 = p3
 
         pilMode = 'RGB'
         # argbArray = numpy.fromstring( ims.get_data(), 'c' ).reshape( -1, 4 )

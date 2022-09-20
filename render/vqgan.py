@@ -11,15 +11,7 @@ from taming.models import cond_transformer, vqgan
 import torchvision
 
 from renderinterface import RenderingInterface
-from utils import map_number, Vector, perpendicular, normalize, create_save_folder
-
-
-def wget_file(url, out):
-    try:
-        output = subprocess.check_output(['wget', '-O', out, url])
-    except subprocess.CalledProcessError as cpe:
-        output = cpe.output
-        print("Ignoring non-zero exit: ", output)
+from utils import map_number, Vector, perpendicular, normalize, create_save_folder, wget_file
 
 
 class ReplaceGrad(torch.autograd.Function):

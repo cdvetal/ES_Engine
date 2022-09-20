@@ -3,6 +3,7 @@ import importlib
 import json
 import math
 import os
+import subprocess
 import sys
 
 import numpy as np
@@ -228,3 +229,14 @@ def get_class_index_list(mapping, keys):
     key_list = keys.split(",")
     index_list = [get_class_index(mapping, k) for k in key_list]
     return index_list
+
+
+# downloader
+def wget_file(url, out):
+    try:
+        print(f"Downloading {out} from {url}, please wait")
+        output = subprocess.check_output(['wget', '-O', out, url])
+    except subprocess.CalledProcessError as cpe:
+        output = cpe.output
+        print("Ignoring non-zero exit: ", output)
+

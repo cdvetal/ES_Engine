@@ -12,15 +12,20 @@ class LineRenderer(RenderingInterface):
 
         self.num_lines = args.num_lines
 
-        self.genotype_size = 12
-        self.real_genotype_size = self.genotype_size * args.num_lines
+        self.stroke_length = 8
+
+        self.genotype_size = ((self.stroke_length * 6) + 3)
+        self.real_genotype_size = self.genotype_size * self.num_lines
 
     def chunks(self, array):
         img = np.array(array)
-        return np.reshape(img, (self.args.num_lines, self.genotype_size))
+        return np.reshape(img, (self.num_lines, self.genotype_size))
 
     def __str__(self):
-        return "clipdrawer"
+        return "linedrawer"
+
+    def bound(self, value, low, high):
+        return max(low, min(high, value))
 
     def render(self, a, img_size):
         ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
@@ -30,45 +35,50 @@ class LineRenderer(RenderingInterface):
         min_width = 0.5 * img_size / 100
 
         # background shape
-        p0 = [0, 0]
-        p1 = [img_size, img_size]
         cr.set_source_rgba(242/255.0, 238/255.0, 203/255.0, 1.0)  # everything on cairo appears to be between 0 and 1
         cr.rectangle(0, 0, img_size, img_size)  # define a rectangle and then fill it
         cr.fill()
 
-        """
-        # Initialize Random Curves
-        for i in range(num_paths):
+        for e in a:
             num_segments = self.stroke_length
-            num_control_points = torch.zeros(num_segments, dtype = torch.int32) + 2
-            points = []
             radius = 0.5
-            radius_x = 0.5 #radius * canvas_height / canvas_width
-            p0 = (0.5 + radius_x * (random.random() - 0.5), 0.5 + radius * (random.random() - 0.5))
-            points.append(p0)
+            radius_x = 0.5  # radius * canvas_height / canvas_width
+            p0 = (0.5 + radius_x * (e[0] - 0.5), 0.5 + radius * (e[1] - 0.5))
+
+            w = map_number(e[3], 0, 1, min_width, max_width)
+
+            cr.set_source_rgb(0, 0, 0)
+            # line width
+            cr.set_line_width(w)
+
+            ind = 3
             for j in range(num_segments):
                 radius = 1.0 / (num_segments + 2)
-                radius_x = radius * canvas_height / canvas_width
-                p1 = (p0[0] + radius_x * (random.random() - 0.5), p0[1] + radius * (random.random() - 0.5))
-                p2 = (p1[0] + radius_x * (random.random() - 0.5), p1[1] + radius * (random.random() - 0.5))
-                p3 = (p2[0] + radius_x * (random.random() - 0.5), p2[1] + radius * (random.random() - 0.5))
-                points.append(p1)
-                points.append(p2)
-                points.append(p3)
-                p0 = (bound(p3[0],0,1), bound(p3[1],0,1))
+                p1 = (p0[0] + radius_x * (e[ind] - 0.5), p0[1] + radius * (e[ind + 1] - 0.5))
+                p2 = (p1[0] + radius_x * (e[ind + 2] - 0.5), p1[1] + radius * (e[ind + 3] - 0.5))
+                p3 = (p2[0] + radius_x * (e[ind + 4] - 0.5), p2[1] + radius * (e[ind + 5] - 0.5))
 
-            points = torch.tensor(points)
-            points[:, 0] *= canvas_width
-            points[:, 1] *= canvas_height
-            path = pydiffvg.Path(num_control_points = num_control_points, points = points, stroke_width = torch.tensor(max_width/10), is_closed = False)
-            shapes.append(path)
-            s_col = [0, 0, 0, 1]
-            path_group = pydiffvg.ShapeGroup(shape_ids = torch.tensor([len(shapes)-1]), fill_color = None, stroke_color = torch.tensor(s_col))
-            shape_groups.append(path_group)
+                ind += 6
 
-        # Just some diffvg setup
-        scene_args = pydiffvg.RenderFunction.serialize_scene(\
-            canvas_width, canvas_height, shapes, shape_groups)
-        render = pydiffvg.RenderFunction.apply
-        img = render(canvas_width, canvas_height, 2, 2, 0, None, *scene_args)
-        """
+                cr.move_to(p0[0] * img_size, p0[1] * img_size)
+                cr.curve_to(p1[0] * img_size, p1[1] * img_size, p2[0] * img_size, p2[1] * img_size, p3[0] * img_size,
+                            p3[1] * img_size)
+
+                cr.stroke()
+
+                p0 = (self.bound(p3[0], 0, 1), self.bound(p3[1], 0, 1))
+
+        pilMode = 'RGB'
+        # argbArray = numpy.fromstring( ims.get_data(), 'c' ).reshape( -1, 4 )
+        argbArray = np.fromstring(bytes(ims.get_data()), 'c').reshape(-1, 4)
+        rgbArray = argbArray[:, 2::-1]
+        pilData = rgbArray.reshape(-1).tostring()
+        pilImage = Image.frombuffer(pilMode,
+                                    (ims.get_width(), ims.get_height()), pilData, "raw",
+                                    pilMode, 0, 1)
+        pilImage = pilImage.convert('RGB')
+
+        # draw line with round line caps (circles at the end)
+        # draw.polygon(
+        #   ((x1,y1), (x2,y2), (x3,y3)), (R,G,B), outline=None)
+        return pilImage

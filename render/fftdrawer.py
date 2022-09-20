@@ -45,4 +45,5 @@ class FFTRenderer(RenderingInterface):
         return "fftdrawer"
 
     def render(self, a, img_size):
+        pass
 
