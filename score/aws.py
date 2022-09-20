@@ -9,7 +9,7 @@ import numpy as np
 
 import boto3
 
-from scoreinterface import ScoreInterface
+from score.scoreinterface import ScoreInterface
 
 boto_client = None
 min_api_score = 0.1

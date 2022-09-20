@@ -4,7 +4,7 @@ import cairo
 import numpy as np
 from PIL import Image
 
-from renderinterface import RenderingInterface
+from render.renderinterface import RenderingInterface
 from utils import map_number
 
 
@@ -22,7 +22,7 @@ class CharsRenderer(RenderingInterface):
     def __str__(self):
         return "chars"
 
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         """
         @a: array of real vectors, length 8, each component normalized 0-1
         """

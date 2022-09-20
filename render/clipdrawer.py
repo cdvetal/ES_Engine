@@ -2,7 +2,7 @@ import cairo
 import numpy as np
 from PIL import Image
 
-from renderinterface import RenderingInterface
+from render.renderinterface import RenderingInterface
 from utils import map_number
 
 
@@ -22,7 +22,7 @@ class ClipDrawRenderer(RenderingInterface):
     def __str__(self):
         return "clipdrawer"
 
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         # split input array into header and rest
         head = a[:self.header_length]
         rest = a[self.header_length:]

@@ -1,4 +1,4 @@
-from scoreinterface import ScoreInterface
+from score.scoreinterface import ScoreInterface
 from efficientnet.tfkeras import EfficientNetB0
 from efficientnet.tfkeras import preprocess_input
 

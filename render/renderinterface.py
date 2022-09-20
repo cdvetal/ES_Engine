@@ -9,6 +9,6 @@ class RenderingInterface:
     def load_model(self, config, checkpoint):
         pass
 
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         pass
 

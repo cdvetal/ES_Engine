@@ -2,7 +2,7 @@ import cairo
 import numpy as np
 from PIL import Image
 
-from renderinterface import RenderingInterface
+from render.renderinterface import RenderingInterface
 
 
 class PixelRenderer(RenderingInterface):
@@ -21,7 +21,7 @@ class PixelRenderer(RenderingInterface):
     def __str__(self):
         return "pixel"
 
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
         cr = cairo.Context(ims)
 

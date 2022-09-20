@@ -6,7 +6,7 @@ import re
 import io
 from PIL import Image
 import numpy as np
-from scoreinterface import ScoreInterface
+from score.scoreinterface import ScoreInterface
 
 from google.cloud import vision as vision
 

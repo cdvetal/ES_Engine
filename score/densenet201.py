@@ -1,4 +1,4 @@
-from scoreinterface import ScoringInterface
+from score.scoreinterface import ScoringInterface
 import tensorflow.keras as keras
 
 class Scoring(ScoringInterface): 

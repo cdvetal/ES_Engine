@@ -4,7 +4,7 @@ import cairo
 import numpy as np
 from PIL import Image
 
-from renderinterface import RenderingInterface
+from render.renderinterface import RenderingInterface
 from utils import map_number, Vector, perpendicular, normalize
 
 
@@ -23,7 +23,7 @@ class ThinOrganicRenderer(RenderingInterface):
         return "thinorg"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         # split input array into header and rest
         head = a[:self.header_length]
         rest = a[self.header_length:]

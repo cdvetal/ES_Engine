@@ -1,17 +1,22 @@
-import math
 import subprocess
 
 import torch
 import torch.nn.functional as F
 import numpy as np
 from omegaconf import OmegaConf
-from PIL import Image
-import requests
-from taming.models import cond_transformer, vqgan
+from taming.models import vqgan
 import torchvision
 
-from renderinterface import RenderingInterface
-from utils import map_number, Vector, perpendicular, normalize, create_save_folder, wget_file
+from render.renderinterface import RenderingInterface
+from utils import create_save_folder
+
+
+def wget_file(url, out):
+    try:
+        output = subprocess.check_output(['wget', '-O', out, url])
+    except subprocess.CalledProcessError as cpe:
+        output = cpe.output
+        print("Ignoring non-zero exit: ", output)
 
 
 class ReplaceGrad(torch.autograd.Function):
@@ -129,7 +134,7 @@ class VQGANRenderer(RenderingInterface):
     def __str__(self):
         return "VQGAN"
 
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         z_q = self.vector_quantize(a.movedim(1, 3), self.model.quantize.embedding.weight).movedim(3, 1)
         out = self.clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
 

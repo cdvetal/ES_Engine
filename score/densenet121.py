@@ -1,4 +1,4 @@
-from scoreinterface import ScoreInterface
+from score.scoreinterface import ScoreInterface
 from tensorflow import keras
 
 

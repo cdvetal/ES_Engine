@@ -36,6 +36,8 @@ render_table = {
     # "biggan": BigGANRenderer,
 }
 
+cur_iteration = 0
+
 
 def calculate_fitness(args, ind):
     do_score_reverse = False
@@ -54,7 +56,7 @@ def calculate_fitness(args, ind):
 
     # build lists of images at all needed sizes
     img_array = args.renderer.chunks(ind)
-    img = args.renderer.render(img_array, img_size=args.img_size)
+    img = args.renderer.render(img_array, img_size=args.img_size, cur_iteration=cur_iteration)
 
     for target_size in target_size_table:
         if target_size is None:
@@ -143,6 +145,8 @@ def calculate_fitness(args, ind):
 
 
 def main(args):
+    global cur_iteration
+
     # The CMA-ES algorithm takes a population of one individual as argument
     # The centroid is set to a vector of 5.0 see http://www.lri.fr/~hansen/cmaes_inmatlab.html
     # for more details about the rastrigin and other tests for CMA-ES
@@ -169,6 +173,7 @@ def main(args):
 
     for gen in range(args.n_gens):
         print("Generation:", gen)
+        cur_iteration = gen
         # Generate a new population
         population = toolbox.generate()
         # Evaluate the individuals

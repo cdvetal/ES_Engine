@@ -1,4 +1,4 @@
-from scoreinterface import ScoreInterface
+from score.scoreinterface import ScoreInterface
 from efficientnet.keras import EfficientNetB7
 from efficientnet.keras import preprocess_input
 

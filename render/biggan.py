@@ -1,10 +1,9 @@
 import numpy as np
 import torch
-from pytorch_pretrained_biggan import (BigGAN, one_hot_from_names, truncated_noise_sample,
-                                       save_as_images, display_in_terminal)
+from pytorch_pretrained_biggan import (BigGAN, one_hot_from_names)
 from torchvision import transforms
 
-from renderinterface import RenderingInterface
+from render.renderinterface import RenderingInterface
 
 
 class BigGANRenderer(RenderingInterface):
@@ -47,7 +46,7 @@ class BigGANRenderer(RenderingInterface):
     def __str__(self):
         return "biggan"
 
-    def render(self, a, img_size):
+    def render(self, a, img_size, cur_iteration):
         noise_vector = torch.from_numpy(a).to(self.device).float()
         # Generate an image
         with torch.no_grad():
