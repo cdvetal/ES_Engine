@@ -6,5 +6,5 @@ from .pixel import PixelRenderer
 from .vqgan import VQGANRenderer
 from .clipdrawer import ClipDrawRenderer
 from .linedrawer import LineRenderer
-from .biggan import BigGANRenderer
+# from .biggan import BigGANRenderer
 # from .fftdrawer import FFTRenderer

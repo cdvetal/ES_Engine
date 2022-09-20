@@ -14,5 +14,5 @@ for render in renders:
     values = torch.rand(render.real_genotype_size)
 
     values = render.chunks(values)
-    # img = render.render(values, 512)
-    # img.save("images/img_{}.png".format(render))
+    img = render.render(values, 512)
+    img.save("images/img_{}.png".format(render))
