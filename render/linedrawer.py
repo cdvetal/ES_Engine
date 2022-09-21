@@ -25,7 +25,7 @@ class LineRenderer(RenderingInterface):
     def bound(self, value, low, high):
         return max(low, min(high, value))
 
-    def render(self, a, img_size, cur_iteration):
+    def render(self, a, cur_iteration):
         ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
         cr = cairo.Context(ims)
 

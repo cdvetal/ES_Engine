@@ -20,7 +20,7 @@ class PylinhasRenderer(RenderingInterface):
     def __str__(self):
         return "pylinhas"
 
-    def render(self, a, img_size, cur_iteration):
+    def render(self, a, cur_iteration):
         # split input array into header and rest
         head = a[:self.header_length]
         rest = a[self.header_length:]

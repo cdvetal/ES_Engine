@@ -46,7 +46,7 @@ class BigGANRenderer(RenderingInterface):
     def __str__(self):
         return "biggan"
 
-    def render(self, a, img_size, cur_iteration):
+    def render(self, a, cur_iteration):
         noise_vector = torch.from_numpy(a).to(self.device).float()
         # Generate an image
         with torch.no_grad():

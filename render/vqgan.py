@@ -134,7 +134,7 @@ class VQGANRenderer(RenderingInterface):
     def __str__(self):
         return "VQGAN"
 
-    def render(self, a, img_size, cur_iteration):
+    def render(self, a, cur_iteration):
         z_q = self.vector_quantize(a.movedim(1, 3), self.model.quantize.embedding.weight).movedim(3, 1)
         out = self.clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
 

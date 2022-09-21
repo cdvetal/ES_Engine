@@ -104,7 +104,7 @@ class VDiffRenderer(RenderingInterface):
     def __str__(self):
         return "vdiff"
 
-    def render(self, a, img_size, cur_iteration):
+    def render(self, a, cur_iteration):
         x = torch.tensor(a).to(self.device)
 
         self.sample_state = sampling.sample_setup(self.model, x, self.steps, self.eta, {})

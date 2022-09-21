@@ -23,7 +23,7 @@ class ThinOrganicRenderer(RenderingInterface):
         return "thinorg"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, a, img_size, cur_iteration):
+    def render(self, a, cur_iteration):
         # split input array into header and rest
         head = a[:self.header_length]
         rest = a[self.header_length:]
