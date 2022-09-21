@@ -9,7 +9,7 @@ from torchvision.transforms import functional as TF
 
 from v_diffusion_pytorch.diffusion import get_model, get_models, sampling, utils
 
-from renderinterface import RenderingInterface
+from render.renderinterface import RenderingInterface
 from utils import map_number
 from utils import wget_file
 from v_diffusion_pytorch.diffusion.utils import get_spliced_ddpm_cosine_schedule
@@ -87,12 +87,12 @@ class VDiffRenderer(RenderingInterface):
         self.t = torch.linspace(top_val, 0, self.iterations + 2, device=self.device)[:-1]
         # print("self.t is ", self.t.shape)
 
-        # self.x = torch.randn([1, 3, self.gen_height, self.gen_width], device=self.device)
+        self.x = torch.randn([1, 3, self.gen_height, self.gen_width], device=self.device)
 
         self.steps = get_spliced_ddpm_cosine_schedule(self.t)
 
         # [model, steps, eta, extra_args, ts, alphas, sigmas]
-        # self.sample_state = sampling.sample_setup(self.model, self.x, self.steps, self.eta, {})
+        self.sample_state = sampling.sample_setup(self.model, self.x, self.steps, self.eta, {})
 
         self.genotype_size = 1 * 3 * self.gen_height * self.gen_width
         self.real_genotype_size = self.genotype_size
@@ -107,7 +107,7 @@ class VDiffRenderer(RenderingInterface):
     def render(self, a, cur_iteration):
         x = torch.tensor(a).to(self.device)
 
-        self.sample_state = sampling.sample_setup(self.model, x, self.steps, self.eta, {})
+        # sample_state = sampling.sample_setup(self.model, x, self.steps, self.eta, {})
 
         pred, v, next_x = sampling.sample_step(self.sample_state, x, cur_iteration, self.pred, self.v)
         self.pred = pred.detach()
