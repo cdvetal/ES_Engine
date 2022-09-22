@@ -193,7 +193,7 @@ class PixelRenderer(RenderingInterface):
 
     def chunks(self, array):
         img = np.array(array)
-        return np.reshape(img, ((self.num_lines * self.num_lines), self.genotype_size))
+        return np.reshape(img, (self.num_lines, self.num_lines, self.genotype_size))
 
     def __str__(self):
         return "pixel"
