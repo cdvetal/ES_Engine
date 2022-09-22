@@ -34,7 +34,7 @@ render_table = {
     "vqgan": VQGANRenderer,
     "clipdraw": ClipDrawRenderer,
     "vdiff": VDiffRenderer,
-    # "biggan": BigGANRenderer,
+    "biggan": BigGANRenderer,
 }
 
 cur_iteration = 0

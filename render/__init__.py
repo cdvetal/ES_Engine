@@ -7,5 +7,5 @@ from .vqgan import VQGANRenderer
 from .clipdrawer import ClipDrawRenderer
 from .linedrawer import LineRenderer
 from .vdiff import VDiffRenderer
-# from .biggan import BigGANRenderer
+from .biggandrawer import BigGANRenderer
 # from .fftdrawer import FFTRenderer
