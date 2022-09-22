@@ -226,16 +226,19 @@ class PixelRenderer(RenderingInterface):
                 else:
                     pts = rect_from_corners(p0, p1)
 
+                pts = np.array(pts)
+                # print("Shape", pts.shape)
+
                 red = a[r][c][0]
-                green = a[r][c][0]
-                blue = a[r][c][0]
+                green = a[r][c][1]
+                blue = a[r][c][2]
 
                 cr.set_source_rgb(red, green, blue)
 
-                cr.move_to(pts[0], pts[1])
+                cr.move_to(pts[0][0], pts[0][1])
 
-                for p in range(2, len(pts), 2):
-                    cr.line_to(pts[p], pts[p + 1])
+                for p in range(1, len(pts)):
+                    cr.line_to(pts[p][0], pts[p][1])
 
                 cr.close_path()
 
