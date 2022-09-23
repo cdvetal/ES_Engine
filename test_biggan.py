@@ -42,8 +42,7 @@ model.to(device).eval()
 perceptor, preprocess = clip.load('ViT-B/32', device)
 
 text_inputs = clip.tokenize("Darth Vader").to(device)
-
-text_features = model.encode_text(text_inputs)
+text_features = perceptor.encode_text(text_inputs)
 
 num_latents = len(model.config.layers) + 1
 num_cuts = 128
@@ -55,6 +54,7 @@ conditional_vector = CondVectorParameters(a, num_latents=num_latents).to(device)
 optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
 
 for i in range(100):
+    print(i)
     cond_vector = conditional_vector()
     out = model(cond_vector, 1)
 
