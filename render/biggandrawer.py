@@ -32,7 +32,7 @@ class BigGANRenderer(RenderingInterface):
         a = torch.tensor(a).float().to(self.device)
         out = self.model(a, 1)
 
-        out = TF.to_pil_image(out)
+        out = TF.to_pil_image(out.squeeze())
 
         return out
 

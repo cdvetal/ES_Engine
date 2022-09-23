@@ -163,19 +163,6 @@ def knit_from_corners(p0, p1):
 shift_pixel_types = ["hex", "rectshift", "diamond"]
 
 
-def gkern(size, gamma):
-    """
-    creates gaussian kernel with side length `l` and a sigma of `sig`
-    https://stackoverflow.com/a/43346070/6028830
-    """
-    sig = size / gamma
-    ax = np.linspace(-(size - 1) / 2., (size - 1) / 2., size)
-    gauss = np.exp(-0.5 * np.square(ax) / np.square(sig))
-    kernel = -np.outer(gauss, gauss)
-    kernel = (kernel - kernel.min()) / (kernel.max() - kernel.min())
-    return kernel * (size ** 2) / np.sum(kernel)  # normalize such that the sum of pixel was the same as the original
-
-
 class PixelRenderer(RenderingInterface):
     def __init__(self, args):
         super(PixelRenderer, self).__init__(args)
@@ -210,7 +197,6 @@ class PixelRenderer(RenderingInterface):
             cur_y = int(r * self.cell_size)
             for c in range(self.num_lines):
                 cur_x = c * self.cell_size
-                cur_index = ((r * self.num_lines) + c) * 3
 
                 p0 = [cur_x, cur_y]
                 p1 = [cur_x + self.cell_size, cur_y + self.cell_size]
