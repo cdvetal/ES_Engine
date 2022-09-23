@@ -21,6 +21,7 @@ from deap import creator
 from deap import tools
 import torch
 import torchvision.transforms as transforms
+import torchvision.transforms.functional as F
 import argparse
 from config import *
 
@@ -123,18 +124,21 @@ def calculate_fitness(args, ind):
     if args.clip_influence > 0.0:
         # Calculate clip similarity
         p_s = []
-        sideX, sideY, channels = img.shape
+        t_img = F.to_tensor(img).to(args.device)
+        sideX, sideY, channels = t_img.shape
+        print(t_img.shape)
+        print(sideX, sideY, channels)
         for ch in range(128):
             size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
             offsetx = torch.randint(0, sideX - size, ())
             offsety = torch.randint(0, sideX - size, ())
-            apper = img[:, :, offsetx:offsetx + size, offsety:offsety + size]
+            apper = t_img[:, offsetx:offsetx + size, offsety:offsety + size]
             p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
         # convert_tensor = torchvision.transforms.ToTensor()
-        into = torch.cat(p_s, 0)
+        into = torch.cat(p_s, 0).to(args.device)
 
         normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-        into = normalize((into + 1) / 2).to(args.device)
+        into = normalize((into + 1) / 2)
 
         image_features = args.clip.encode_image(into)
         text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean().item()

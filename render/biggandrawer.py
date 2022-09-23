@@ -58,17 +58,8 @@ class BigGANRenderer(RenderingInterface):
     def render(self, a, cur_iteration):
         conditional_vector = CondVectorParameters(a, num_latents=self.num_latents).to(self.device)
 
-        lr = .0
-
-        local_search_optimizer = torch.optim.Adam(conditional_vector.parameters(), lr)
-
         cond_vector = conditional_vector()
         out = self.model(cond_vector, 1)
-
-
-
-
-
 
         out = TF.to_pil_image(out.squeeze())
 
