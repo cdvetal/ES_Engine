@@ -49,10 +49,11 @@ class BigGANRenderer(RenderingInterface):
         if args.clip is None:
             model, preprocess = clip.load("ViT-B/32", device=args.device)
             self.clip = model
-            self.text_features = args.target_class
+            text_inputs = clip.tokenize([args.target_class]).to(args.device)
+            self.text_features = model.encode_text(text_inputs)
         else:
             self.clip = args.clip
-            self.text_features = args.clip_prompts
+            self.text_features = args.text_features
 
         self.num_latents = len(self.model.config.layers) + 1
 
