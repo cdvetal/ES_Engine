@@ -6,8 +6,8 @@ NUM_LINES = 8
 SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
-POP_SIZE = 20
-N_GENS = 50
+POP_SIZE = 2
+N_GENS = 2
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25

@@ -203,7 +203,7 @@ def main(args):
         if halloffame is not None:
             save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
             img_array = renderer.chunks(halloffame[0])
-            img = renderer.render(img_array, img_size=args.img_size, cur_iteration=cur_iteration)
+            img = renderer.render(img_array, cur_iteration=cur_iteration)
             img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
         if halloffame[0].fitness.values[0] >= args.target_fit:
