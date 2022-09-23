@@ -44,12 +44,12 @@ class BigGANRenderer(RenderingInterface):
 
         self.num_latents = len(self.model.config.layers) + 1
 
-        self.genotype_size = (16 * 256)
+        self.genotype_size = (self.num_latents * 256)
         self.real_genotype_size = self.genotype_size
 
     def chunks(self, array):
         img = np.array(array)
-        return np.reshape(img, (16, 256))
+        return np.reshape(img, (self.num_latents, 256))
 
     def __str__(self):
         return "biggan"
