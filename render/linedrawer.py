@@ -1,5 +1,6 @@
 import cairo
 import numpy as np
+from PIL import Image
 
 from render.renderinterface import RenderingInterface
 
@@ -9,6 +10,7 @@ class LineRenderer(RenderingInterface):
         super(LineRenderer, self).__init__(args)
 
         self.num_lines = args.num_lines
+        self.img_size = args.img_size
 
         self.stroke_length = 8
 
@@ -26,15 +28,15 @@ class LineRenderer(RenderingInterface):
         return max(low, min(high, value))
 
     def render(self, a, cur_iteration):
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
+        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
         cr = cairo.Context(ims)
 
-        max_width = 2 * img_size / 100
-        min_width = 0.5 * img_size / 100
+        max_width = 2 * self.img_size / 100
+        min_width = 0.5 * self.img_size / 100
 
         # background shape
         cr.set_source_rgba(242/255.0, 238/255.0, 203/255.0, 1.0)  # everything on cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, img_size, img_size)  # define a rectangle and then fill it
+        cr.rectangle(0, 0, self.img_size, self.img_size)  # define a rectangle and then fill it
         cr.fill()
 
         for e in a:
@@ -58,9 +60,9 @@ class LineRenderer(RenderingInterface):
 
                 ind += 6
 
-                cr.move_to(p0[0] * img_size, p0[1] * img_size)
-                cr.curve_to(p1[0] * img_size, p1[1] * img_size, p2[0] * img_size, p2[1] * img_size, p3[0] * img_size,
-                            p3[1] * img_size)
+                cr.move_to(p0[0] * self.img_size, p0[1] * self.img_size)
+                cr.curve_to(p1[0] * self.img_size, p1[1] * self.img_size, p2[0] * self.img_size, p2[1] * self.img_size, p3[0] * self.img_size,
+                            p3[1] * self.img_size)
 
                 cr.stroke()
 

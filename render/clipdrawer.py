@@ -11,6 +11,7 @@ class ClipDrawRenderer(RenderingInterface):
         super(ClipDrawRenderer, self).__init__(args)
 
         self.num_lines = args.num_lines
+        self.img_size = args.img_size
 
         self.genotype_size = ((3 * 6) + 7)  # 3 segments, 6 values each, plus color (4), width (1), starting point (2)
         self.real_genotype_size = self.genotype_size * self.num_lines
@@ -36,18 +37,18 @@ class ClipDrawRenderer(RenderingInterface):
         # im = Image.new('RGB', (size, size), (R, G, B))
         # draw = ImageDraw.Draw(im, 'RGB')
 
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
+        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
         cr = cairo.Context(ims)
 
         cr.set_source_rgba(R, G, B, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, img_size, img_size)  # define a recatangle and then fill it
+        cr.rectangle(0, 0, self.img_size, self.img_size)  # define a recatangle and then fill it
         cr.fill()
 
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
 
-        max_width = 2.0 * img_size / 100
-        min_width = 0.5 * img_size / 100
+        max_width = 2.0 * self.img_size / 100
+        min_width = 0.5 * self.img_size / 100
 
         for e in rest:
             R = e[0]
@@ -73,9 +74,9 @@ class ClipDrawRenderer(RenderingInterface):
 
                 ind += 6
 
-                cr.move_to(p0[0] * img_size, p0[1] * img_size)
-                cr.curve_to(p1[0] * img_size, p1[1] * img_size, p2[0] * img_size, p2[1] * img_size, p3[0] * img_size,
-                            p3[1] * img_size)
+                cr.move_to(p0[0] * self.img_size, p0[1] * self.img_size)
+                cr.curve_to(p1[0] * self.img_size, p1[1] * self.img_size, p2[0] * self.img_size, p2[1] * self.img_size, p3[0] * self.img_size,
+                            p3[1] * self.img_size)
 
                 cr.stroke()
 

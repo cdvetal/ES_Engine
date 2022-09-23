@@ -12,6 +12,8 @@ class OrganicRenderer(RenderingInterface):
     def __init__(self, args):
         super(OrganicRenderer, self).__init__(args)
 
+        self.img_size = args.image_size
+
         self.genotype_size = 13
         self.real_genotype_size = self.genotype_size * args.num_lines
 
@@ -36,17 +38,17 @@ class OrganicRenderer(RenderingInterface):
         # im = Image.new('RGB', (size, size), (R, G, B))
         # draw = ImageDraw.Draw(im, 'RGB')
 
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
+        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
         cr = cairo.Context(ims)
 
         cr.set_source_rgba(R, G, B, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, img_size, img_size)  # define a recatangle and then fill it
+        cr.rectangle(0, 0, self.img_size, self.img_size)  # define a recatangle and then fill it
         cr.fill()
 
         # now draw lines
 
-        min_size = 0.005 * img_size
-        max_size = 0.15 * img_size
+        min_size = 0.005 * self.img_size
+        max_size = 0.15 * self.img_size
 
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
@@ -60,9 +62,9 @@ class OrganicRenderer(RenderingInterface):
             w1 = map_number(e[3], 0, 1, min_size, max_size)
             w2 = map_number(e[4], 0, 1, min_size, max_size)
 
-            a = Vector(map_number(e[5], 0, 1, 0, img_size), map_number(e[6], 0, 1, 0, img_size))
+            a = Vector(map_number(e[5], 0, 1, 0, self.img_size), map_number(e[6], 0, 1, 0, self.img_size))
             # a=Vector(500, 200)
-            d = Vector(map_number(e[7], 0, 1, 0, img_size), map_number(e[8], 0, 1, 0, img_size))
+            d = Vector(map_number(e[7], 0, 1, 0, self.img_size), map_number(e[8], 0, 1, 0, self.img_size))
             # d=Vector(200, 800)
             A = Vector(a.x, a.y)
             D = Vector(d.x, d.y)

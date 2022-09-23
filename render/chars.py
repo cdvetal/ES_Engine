@@ -12,6 +12,8 @@ class CharsRenderer(RenderingInterface):
     def __init__(self, args):
         super(CharsRenderer, self).__init__(args)
 
+        self.img_size = args.img_size
+
         self.genotype_size = 8
         self.real_genotype_size = self.genotype_size * args.num_lines
 
@@ -41,16 +43,16 @@ class CharsRenderer(RenderingInterface):
         # im = Image.new('RGB', (size, size), (R, G, B))
         # draw = ImageDraw.Draw(im, 'RGB')
 
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
+        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
         cr = cairo.Context(ims)
 
         cr.set_source_rgba(r, g, b, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, img_size, img_size)  # define a rectangle and then fill it
+        cr.rectangle(0, 0, self.img_size, self.img_size)  # define a rectangle and then fill it
         cr.fill()
 
         # now draw lines
-        min_size = 0.01 * img_size
-        max_size = img_size
+        min_size = 0.01 * self.img_size
+        max_size = self.img_size
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
         cr.select_font_face("Serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
@@ -84,8 +86,8 @@ class CharsRenderer(RenderingInterface):
             # y = map_number(e[6], 0, 1, 0-heightc-yc, size-yc)
             angle = map_number(e[7], 0, 1, 0, math.pi * 2)
 
-            x = map_number(e[5], 0, 1, 0 - widthc - xc, img_size - xc)
-            y = map_number(e[6], 0, 1, 0 - heightc - yc, img_size - yc)
+            x = map_number(e[5], 0, 1, 0 - widthc - xc, self.img_size - xc)
+            y = map_number(e[6], 0, 1, 0 - heightc - yc, self.img_size - yc)
 
             # cr.move_to(x, y)
             # cr.show_text(chars[charit])

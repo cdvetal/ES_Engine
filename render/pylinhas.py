@@ -10,6 +10,8 @@ class PylinhasRenderer(RenderingInterface):
     def __init__(self, args):
         super(PylinhasRenderer, self).__init__(args)
 
+        self.img_size = args.img_size
+
         self.genotype_size = 8
         self.real_genotype_size = self.genotype_size * args.num_lines
 
@@ -34,20 +36,20 @@ class PylinhasRenderer(RenderingInterface):
         # im = Image.new('RGB', (size, size), (R, G, B))
         # draw = ImageDraw.Draw(im, 'RGB')
 
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, img_size, img_size)
+        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
         cr = cairo.Context(ims)
 
         cr.set_source_rgba(R, G, B, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, img_size, img_size)  # define a recatangle and then fill it
+        cr.rectangle(0, 0, self.img_size, self.img_size)  # define a recatangle and then fill it
         cr.fill()
 
         # now draw lines
         if len(head[0]) > 8:
-            min_width = 0.004 * img_size
-            max_width = 0.04 * img_size
+            min_width = 0.004 * self.img_size
+            max_width = 0.04 * self.img_size
         else:
-            min_width = 0.0001 * img_size
-            max_width = 0.1 * img_size
+            min_width = 0.0001 * self.img_size
+            max_width = 0.1 * self.img_size
 
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
@@ -66,8 +68,8 @@ class PylinhasRenderer(RenderingInterface):
             # cr.set_line_width(1)
 
             for it in range(4, len(e) - 1, 2):
-                x = map_number(e[it], 0, 1, 0, img_size)
-                y = map_number(e[it + 1], 0, 1, 0, img_size)
+                x = map_number(e[it], 0, 1, 0, self.img_size)
+                y = map_number(e[it + 1], 0, 1, 0, self.img_size)
                 cr.line_to(x, y)
 
             cr.close_path()
