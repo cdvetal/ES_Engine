@@ -124,15 +124,13 @@ def calculate_fitness(args, ind):
     if args.clip_influence > 0.0:
         # Calculate clip similarity
         p_s = []
-        t_img = F.to_tensor(img).to(args.device)
-        sideX, sideY, channels = t_img.shape
-        print(t_img.shape)
-        print(sideX, sideY, channels)
+        t_img = F.to_tensor(img).unsqueeze(0).to(args.device)
+        _, channels, sideX, sideY = t_img.shape
         for ch in range(128):
             size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
             offsetx = torch.randint(0, sideX - size, ())
             offsety = torch.randint(0, sideX - size, ())
-            apper = t_img[:, offsetx:offsetx + size, offsety:offsety + size]
+            apper = t_img[:, :, offsetx:offsetx + size, offsety:offsety + size]
             p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
         # convert_tensor = torchvision.transforms.ToTensor()
         into = torch.cat(p_s, 0).to(args.device)
