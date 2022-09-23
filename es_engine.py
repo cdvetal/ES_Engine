@@ -262,7 +262,6 @@ def setup_args():
     parser.add_argument('--input-image', default=None, help='Image to use as input.')
 
     args = parser.parse_args()
-    args.clip = None
 
     class_mapping = open_class_mapping()
     if args.target_class is None or args.target_class == "none":
@@ -292,6 +291,7 @@ def setup_args():
     for key, value in args.active_models.items():
         print("- ", key)
 
+    args.clip = None
     if args.clip_influence > 0.0:
         args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
 
