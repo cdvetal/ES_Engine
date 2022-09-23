@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 from time import time
 
+import torchvision
 from PIL import Image
 from PIL.Image import Resampling
 import tensorflow as tf
@@ -121,10 +122,22 @@ def calculate_fitness(args, ind):
 
     if args.clip_influence > 0.0:
         # Calculate clip similarity
-        trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        img_t = trans(img).unsqueeze(0).to(args.device)
-        image_features = args.clip.encode_image(img_t)
-        text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=1).item()
+        p_s = []
+        sideX, sideY, channels = img.shape
+        for ch in range(128):
+            size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
+            offsetx = torch.randint(0, sideX - size, ())
+            offsety = torch.randint(0, sideX - size, ())
+            apper = img[:, :, offsetx:offsetx + size, offsety:offsety + size]
+            p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
+        # convert_tensor = torchvision.transforms.ToTensor()
+        into = torch.cat(p_s, 0)
+
+        normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+        into = normalize((into + 1) / 2).to(args.device)
+
+        image_features = args.clip.encode_image(into)
+        text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean().item()
 
     else:
         text_clip_loss = 0.0

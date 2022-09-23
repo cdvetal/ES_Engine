@@ -6,6 +6,31 @@ from render.biggan import BigGAN
 from render.renderinterface import RenderingInterface
 
 
+class CondVectorParameters(torch.nn.Module):
+    def __init__(self, ind_numpy, num_latents=15):
+        super(CondVectorParameters, self).__init__()
+        reshape_array = ind_numpy.reshape(num_latents, -1)
+        self.normu = torch.nn.Parameter(torch.tensor(reshape_array).float())
+        self.thrsh_lat = torch.tensor(1)
+        self.thrsh_cls = torch.tensor(1.9)
+
+    #  def forward(self):
+    # return self.ff2(self.ff1(self.latent_code)), torch.softmax(1000*self.ff4(self.ff3(self.cls)), -1)
+    #   return self.normu, torch.sigmoid(self.cls)
+
+    # def forward(self):
+    #     global CCOUNT
+    #     if (CCOUNT < -10):
+    #         self.normu,self.cls = copiado(self.normu, self.cls)
+    #     if (MAX_CLASSES > 0):
+    #         classes = differentiable_topk(self.cls, MAX_CLASSES)
+    #         return self.normu, classes
+    #     else:
+    #         return self.normu#, torch.sigmoid(self.cls)
+    def forward(self):
+        return self.normu
+
+
 class BigGANRenderer(RenderingInterface):
     def __init__(self, args):
         super(BigGANRenderer, self).__init__(args)
@@ -16,6 +41,8 @@ class BigGANRenderer(RenderingInterface):
 
         self.model = BigGAN.from_pretrained(f'biggan-deep-{output_size}')
         self.model.to(self.device).eval()
+
+        self.num_latents = len(self.model.config.layers) + 1
 
         self.genotype_size = (16 * 256)
         self.real_genotype_size = self.genotype_size
@@ -29,8 +56,19 @@ class BigGANRenderer(RenderingInterface):
 
     # input: array of real vectors, length 8, each component normalized 0-1
     def render(self, a, cur_iteration):
-        a = torch.tensor(a).float().to(self.device)
-        out = self.model(a, 1)
+        conditional_vector = CondVectorParameters(a, num_latents=self.num_latents).to(self.device)
+
+        lr = .0
+
+        local_search_optimizer = torch.optim.Adam(conditional_vector.parameters(), lr)
+
+        cond_vector = conditional_vector()
+        out = self.model(cond_vector, 1)
+
+
+
+
+
 
         out = TF.to_pil_image(out.squeeze())
 
