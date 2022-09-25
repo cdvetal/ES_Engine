@@ -17,10 +17,12 @@ from utils import save_gen_best, create_save_folder, get_active_models_from_arg,
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import numpy as np
+"""
 from deap import base
 from deap import cma
 from deap import creator
 from deap import tools
+"""
 import torch
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as F
@@ -146,7 +148,7 @@ def fitness_input_image(args, img):
     trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     img_t = trans(img).unsqueeze(0).to(args.device)
     image_features = args.clip.encode_image(img_t)
-    image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1).item()
+    image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1)
 
     return image_clip_loss
 
@@ -176,7 +178,7 @@ def fitness_clip_prompts(args, img):
     into = normalize((into + 1) / 2)
 
     image_features = args.clip.encode_image(into)
-    text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean().item()
+    text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean()
 
     return text_clip_loss
 
@@ -190,17 +192,21 @@ def calculate_fitness(args, ind):
 
     classifiers_loss = fitness_classifiers(args, img)
     losses.append(classifiers_loss)
+    print(classifiers_loss)
 
     if args.clip_influence > 0.0:
         text_clip_loss = fitness_clip_prompts(args, img)
+        print(text_clip_loss)
         text_clip_loss *= args.clip_influence
         losses.append(text_clip_loss)
 
     if args.input_image:
         image_clip_loss = fitness_input_image(args, img)
+        print(image_clip_loss)
         losses.append(image_clip_loss)
 
-    final_loss = mean(losses)
+    losses = torch.stack(losses)
+    final_loss = torch.mean(losses)
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -215,15 +221,15 @@ def main_adam(args):
     x = torch.rand(renderer.real_genotype_size)
     x.requires_grad = True
 
-    print(x)
-
     optimizer = optim.Adam([x], lr=0.1)
 
-    """
     for gen in range(args.n_gens):
         print("Generation:", gen)
         cur_iteration = gen
-    """
+
+        optimizer.zero_grad()
+
+        optimizer.step()
 
 
 def main_cma_es(args):
