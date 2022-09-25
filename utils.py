@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 import numpy as np
+import torch
 
 from config import model_groups
 
@@ -240,3 +241,27 @@ def wget_file(url, out):
         output = cpe.output
         print("Ignoring non-zero exit: ", output)
 
+
+class CondVectorParameters(torch.nn.Module):
+    def __init__(self, ind_numpy, num_latents=15):
+        super(CondVectorParameters, self).__init__()
+        reshape_array = ind_numpy.reshape(num_latents, -1)
+        self.normu = torch.nn.Parameter(torch.tensor(reshape_array).float())
+        self.thrsh_lat = torch.tensor(1)
+        self.thrsh_cls = torch.tensor(1.9)
+
+    #  def forward(self):
+    # return self.ff2(self.ff1(self.latent_code)), torch.softmax(1000*self.ff4(self.ff3(self.cls)), -1)
+    #   return self.normu, torch.sigmoid(self.cls)
+
+    # def forward(self):
+    #     global CCOUNT
+    #     if (CCOUNT < -10):
+    #         self.normu,self.cls = copiado(self.normu, self.cls)
+    #     if (MAX_CLASSES > 0):
+    #         classes = differentiable_topk(self.cls, MAX_CLASSES)
+    #         return self.normu, classes
+    #     else:
+    #         return self.normu#, torch.sigmoid(self.cls)
+    def forward(self):
+        return self.normu

@@ -1,6 +1,8 @@
 # IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
 IMG_SIZE = 256
 
+EVOLUTION_TYPE = 'cmaes'
+
 NUM_LINES = 8
 
 SAVE_FOLDER = 'experiments'

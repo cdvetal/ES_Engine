@@ -5,32 +5,7 @@ from torchvision import transforms
 import torchvision.transforms.functional as TF
 
 from render.biggan import BigGAN
-
-
-class CondVectorParameters(torch.nn.Module):
-    def __init__(self, ind_numpy, num_latents=15):
-        super(CondVectorParameters, self).__init__()
-        reshape_array = ind_numpy.reshape(num_latents, -1)
-        self.normu = torch.nn.Parameter(torch.tensor(reshape_array).float())
-        self.thrsh_lat = torch.tensor(1)
-        self.thrsh_cls = torch.tensor(1.9)
-
-    #  def forward(self):
-    # return self.ff2(self.ff1(self.latent_code)), torch.softmax(1000*self.ff4(self.ff3(self.cls)), -1)
-    #   return self.normu, torch.sigmoid(self.cls)
-
-    # def forward(self):
-    #     global CCOUNT
-    #     if (CCOUNT < -10):
-    #         self.normu,self.cls = copiado(self.normu, self.cls)
-    #     if (MAX_CLASSES > 0):
-    #         classes = differentiable_topk(self.cls, MAX_CLASSES)
-    #         return self.normu, classes
-    #     else:
-    #         return self.normu#, torch.sigmoid(self.cls)
-    def forward(self):
-        return self.normu
-
+from utils import CondVectorParameters
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -55,6 +30,8 @@ optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
 
 for i in range(100):
     print(i)
+
+    optimizer.zero_grad()
     cond_vector = conditional_vector()
     out = model(cond_vector, 1)
 
@@ -73,8 +50,8 @@ for i in range(100):
     iii = perceptor.encode_image(into)  # 128 x 512
 
     cos_similarity = torch.cosine_similarity(text_features, iii, dim=-1).mean()
+    cos_similarity = -100 * cos_similarity
 
-    optimizer.zero_grad()
     cos_similarity.backward()
     optimizer.step()
 

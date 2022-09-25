@@ -2,6 +2,7 @@ import os
 import pickle
 import random
 from datetime import datetime
+from statistics import mean
 from time import time
 
 import torchvision
@@ -9,6 +10,7 @@ from PIL import Image
 from PIL.Image import Resampling
 import tensorflow as tf
 import clip
+from torch import optim
 
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
     get_class_index_list
@@ -42,7 +44,20 @@ render_table = {
 cur_iteration = 0
 
 
-def calculate_fitness(args, ind):
+def evaluate(args, ind):
+    local_search_optimizer = torch.optim.Adam(cond_vector_params.parameters(), lr) if local_search_steps else None
+
+    loss1 = evaluate(cond_vector_params)
+    for i in range(local_search_steps):
+        loss = loss1[0] + loss1[1] + loss1[2]
+        local_search_optimizer.zero_grad()
+        loss.backward()
+        local_search_optimizer.step()
+        loss1 = evaluate(cond_vector_params)
+    return loss1
+
+
+def fitness_classifiers(args, img):
     do_score_reverse = False
     if 'MODEL_REVERSE' in os.environ:
         print("-> predictions reversed")
@@ -56,10 +71,6 @@ def calculate_fitness(args, ind):
         model = args.active_models[k]
         target_size = model.get_target_size()
         target_size_table[target_size] = []
-
-    # build lists of images at all needed sizes
-    img_array = args.renderer.chunks(ind)
-    img = args.renderer.render(img_array, cur_iteration=cur_iteration)
 
     for target_size in target_size_table:
         if target_size is None:
@@ -108,59 +119,114 @@ def calculate_fitness(args, ind):
         print("-> Applying predictions reversed")
         full_predictions = 1.0 - full_predictions
 
-    if np.size(full_predictions):  # Check if there are prediction, only happens when no network is specified
-        top_classes = np.argmax(full_predictions, axis=2).flatten()
-        top_class = np.argmax(np.bincount(top_classes))
-        imagenet_index = args.imagenet_indexes[top_class]
+    top_classes = np.argmax(full_predictions, axis=2).flatten()
+    top_class = np.argmax(np.bincount(top_classes))
+    imagenet_index = args.imagenet_indexes[top_class]
 
-        prediction_list = np.sum(full_predictions, axis=2)
+    prediction_list = np.sum(full_predictions, axis=2)
 
-        # extract rewards and merged
-        rewards = np.sum(np.log(prediction_list + 1), axis=0)
-        merged = np.dstack(prediction_list)[0]
-    else:
-        rewards = [0.0]
+    # extract rewards and merged
+    rewards = np.sum(np.log(prediction_list + 1), axis=0)
+    merged = np.dstack(prediction_list)[0]
+
+    return rewards[0]
+
+
+def fitness_input_image(args, img):
+    if not args.clip:
+        args.clip_model = "ViT-B/32"
+        model, preprocess = clip.load(args.clip_model, device=args.device)
+        args.clip = model
+        args.preprocess = preprocess
+
+    image = args.preprocess(Image.open(args.input_image)).unsqueeze(0).to(args.device)
+    args.image_features = args.clip.encode_image(image)
+
+    # Calculate clip similarity
+    trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+    img_t = trans(img).unsqueeze(0).to(args.device)
+    image_features = args.clip.encode_image(img_t)
+    image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1).item()
+
+    return image_clip_loss
+
+
+def fitness_clip_prompts(args, img):
+    if not args.clip:
+        args.clip_model = "ViT-B/32"
+        model, preprocess = clip.load(args.clip_model, device=args.device)
+        args.clip = model
+        args.preprocess = preprocess
+
+    # Calculate clip similarity
+    p_s = []
+    t_img = F.to_tensor(img).unsqueeze(0).to(args.device)
+    _, channels, sideX, sideY = t_img.shape
+    for ch in range(128):
+        size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
+        offsetx = torch.randint(0, sideX - size, ())
+        offsety = torch.randint(0, sideX - size, ())
+        apper = t_img[:, :, offsetx:offsetx + size, offsety:offsety + size]
+        p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
+    # convert_tensor = torchvision.transforms.ToTensor()
+    into = torch.cat(p_s, 0).to(args.device)
+
+    normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
+                                                 (0.26862954, 0.26130258, 0.27577711))
+    into = normalize((into + 1) / 2)
+
+    image_features = args.clip.encode_image(into)
+    text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean().item()
+
+    return text_clip_loss
+
+
+def calculate_fitness(args, ind):
+    # build lists of images at all needed sizes
+    img_array = args.renderer.chunks(ind)
+    img = args.renderer.render(img_array, cur_iteration=cur_iteration)
+
+    losses = []
+
+    classifiers_loss = fitness_classifiers(args, img)
+    losses.append(classifiers_loss)
 
     if args.clip_influence > 0.0:
-        # Calculate clip similarity
-        p_s = []
-        t_img = F.to_tensor(img).unsqueeze(0).to(args.device)
-        _, channels, sideX, sideY = t_img.shape
-        for ch in range(128):
-            size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
-            offsetx = torch.randint(0, sideX - size, ())
-            offsety = torch.randint(0, sideX - size, ())
-            apper = t_img[:, :, offsetx:offsetx + size, offsety:offsety + size]
-            p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
-        # convert_tensor = torchvision.transforms.ToTensor()
-        into = torch.cat(p_s, 0).to(args.device)
-
-        normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-        into = normalize((into + 1) / 2)
-
-        image_features = args.clip.encode_image(into)
-        text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean().item()
-
-    else:
-        text_clip_loss = 0.0
+        text_clip_loss = fitness_clip_prompts(args, img)
+        text_clip_loss *= args.clip_influence
+        losses.append(text_clip_loss)
 
     if args.input_image:
-        # Calculate clip similarity
-        trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        img_t = trans(img).unsqueeze(0).to(args.device)
-        image_features = args.clip.encode_image(img_t)
-        image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1).item()
+        image_clip_loss = fitness_input_image(args, img)
+        losses.append(image_clip_loss)
 
-    final_value = ((text_clip_loss * args.clip_influence) + (rewards[0] * (1.0 - args.clip_influence)))
+    final_loss = mean(losses)
 
-    if args.input_image:
-        final_value = (final_value + image_clip_loss) / 2
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
-    return [final_value]
+    return [final_loss]
 
 
-def main(args):
+def main_adam(args):
+    global cur_iteration
+
+    renderer = args.renderer
+
+    x = torch.rand(renderer.real_genotype_size)
+    x.requires_grad = True
+
+    print(x)
+
+    optimizer = optim.Adam([x], lr=0.1)
+
+    """
+    for gen in range(args.n_gens):
+        print("Generation:", gen)
+        cur_iteration = gen
+    """
+
+
+def main_cma_es(args):
     global cur_iteration
 
     # The CMA-ES algorithm takes a population of one individual as argument
@@ -239,6 +305,7 @@ def main(args):
 def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
 
+    parser.add_argument('--evolution-type', default=EVOLUTION_TYPE, help='Specify the type of evolution. (cmaes, adam or hybrid). Default is {}.'.format(EVOLUTION_TYPE))
     parser.add_argument('--random-seed', default=RANDOM_SEED, type=int, help='Use a specific random seed (for repeatability). Default is {}.'.format(RANDOM_SEED))
     parser.add_argument('--save-folder', default=SAVE_FOLDER, help="Directory to experiment outputs. Default is {}.".format(SAVE_FOLDER))
     parser.add_argument('--n-gens', default=N_GENS, type=int, help='Maximum generations. Default is {}.'.format(N_GENS))
@@ -319,16 +386,9 @@ def setup_args():
             args.active_models = {}
 
     if args.input_image:
-        if os.path.exists(args.input_image):
-            if not args.clip:
-                args.clip_model = "ViT-B/32"
-                model, preprocess = clip.load(args.clip_model, device=args.device)
-                args.clip = model
-
-            image = preprocess(Image.open(args.input_image)).unsqueeze(0).to(args.device)
-            args.image_features = args.clip.encode_image(image)
-        else:
-            print("Image file does not exist.")
+        if not os.path.exists(args.input_image):
+            print("Image file does not exist. Ignoring..")
+            args.input_image = None
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
@@ -355,7 +415,7 @@ if __name__ == "__main__":
     # Get time of start of the evolution
     start_time_evo = time()
     # Main program
-    main(args)
+    main_adam(args)
     # Get end time
     end_time = time()
 
