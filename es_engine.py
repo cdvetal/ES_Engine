@@ -17,12 +17,10 @@ from utils import save_gen_best, create_save_folder, get_active_models_from_arg,
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import numpy as np
-"""
 from deap import base
 from deap import cma
 from deap import creator
 from deap import tools
-"""
 import torch
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as F
