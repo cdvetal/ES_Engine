@@ -35,7 +35,7 @@ render_table = {
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
     "pixel": PixelRenderer,
-    "vqgan": VQGANRenderer,
+    # "vqgan": VQGANRenderer,
     "clipdraw": ClipDrawRenderer,
     "vdiff": VDiffRenderer,
     "biggan": BigGANRenderer,
