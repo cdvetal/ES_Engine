@@ -1,5 +1,6 @@
 import cairo
 import numpy as np
+import torch
 from PIL import Image
 
 from render.renderinterface import RenderingInterface
@@ -179,8 +180,9 @@ class PixelRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size * (args.num_lines * args.num_lines)
 
     def chunks(self, array):
-        img = np.array(array)
-        return np.reshape(img, (self.num_lines, self.num_lines, self.genotype_size))
+        # img = np.array(array)
+        # return np.reshape(img, (self.num_lines, self.num_lines, self.genotype_size))
+        return array.view(self.num_lines, self.num_lines, self.genotype_size)
 
     def __str__(self):
         return "pixel"

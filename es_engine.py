@@ -218,7 +218,8 @@ def main_adam(args):
         print("Generation:", gen)
         cur_iteration = gen
 
-        loss = calculate_fitness(args, x.detach().numpy())
+        # loss = calculate_fitness(args, x.detach().numpy())
+        loss = calculate_fitness(args, x)
 
         optimizer.zero_grad()
         loss[0].backward()
