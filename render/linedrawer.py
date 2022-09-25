@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 
 from render.renderinterface import RenderingInterface
+from utils import map_number
 
 
 class LineRenderer(RenderingInterface):

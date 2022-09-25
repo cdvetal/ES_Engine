@@ -8,7 +8,6 @@ from time import time
 import torchvision
 from PIL import Image
 from PIL.Image import Resampling
-import tensorflow as tf
 import clip
 from torch import optim
 
@@ -187,7 +186,6 @@ def calculate_fitness(args, ind):
 
     if args.clip_influence > 0.0:
         text_clip_loss = fitness_clip_prompts(args, img)
-        text_clip_loss.backward()
         print(text_clip_loss)
         text_clip_loss *= args.clip_influence
         losses.append(text_clip_loss)
@@ -346,7 +344,7 @@ def setup_args():
         # TODO: not do this or maybe there is a tf2 way?
         # tf.compat.v1.set_random_seed(args.random_seed)
         # TODO: Confirm this works
-        tf.random.set_seed(args.random_seed)
+        # tf.random.set_seed(args.random_seed)
 
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Using device:", args.device)
