@@ -187,6 +187,7 @@ def calculate_fitness(args, ind):
 
     if args.clip_influence > 0.0:
         text_clip_loss = fitness_clip_prompts(args, img)
+        text_clip_loss.backward()
         print(text_clip_loss)
         text_clip_loss *= args.clip_influence
         losses.append(text_clip_loss)
@@ -218,10 +219,11 @@ def main_adam(args):
         print("Generation:", gen)
         cur_iteration = gen
 
+        optimizer.zero_grad()
+
         # loss = calculate_fitness(args, x.detach().numpy())
         loss = calculate_fitness(args, x)
 
-        optimizer.zero_grad()
         loss[0].backward()
         optimizer.step()
 
