@@ -6,7 +6,6 @@ import torchvision.transforms.functional as TF
 import torch.nn.functional as F
 
 from render.biggan import BigGAN
-from utils import CondVectorParameters
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -22,9 +21,6 @@ embed = model.embeddings(classes)
 cond_vector = torch.cat((latent, embed), dim=1)
 ind = cond_vector.cpu().detach().numpy().flatten()
 
-print(ind)
-
-"""
 # Load the model
 perceptor, preprocess = clip.load('ViT-B/32', device)
 
@@ -37,18 +33,12 @@ num_latents = len(model.config.layers) + 1
 num_cuts = 64
 normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
-
-a = torch.rand(num_latents, 256)
-a.requires_grad = True
-conditional_vector = CondVectorParameters(a).to(device)
-
-optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
+optimizer = optim.Adam([ind], lr=0.07)
 
 for i in range(200):
     print(i)
 
-    cond_vector = conditional_vector()
-    out = model(cond_vector, 1)
+    out = model(ind, 1)
 
     p_s = []
     _, channels, sideX, sideY = out.shape
@@ -73,8 +63,6 @@ for i in range(200):
     cos_similarity.backward()
     optimizer.step()
 
-cond_vector = conditional_vector()
-out = model(cond_vector, 1)
+out = model(ind, 1)
 out = TF.to_pil_image(out.squeeze())
 out.save("out.png")
-"""

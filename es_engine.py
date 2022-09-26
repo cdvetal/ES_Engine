@@ -227,7 +227,6 @@ def main_adam(args):
         img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
 
-
 def main_cma_es(args):
     global cur_iteration
 
