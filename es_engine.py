@@ -134,6 +134,7 @@ def fitness_input_image(args, img):
     img_t = trans(img).unsqueeze(0).to(args.device)
     image_features = args.clip.encode_image(img_t)
     image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1)
+    image_clip_loss *= -1
 
     return image_clip_loss
 
@@ -165,6 +166,7 @@ def fitness_clip_prompts(args, img):
 
     image_features = args.clip.encode_image(into)
     text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean()
+    text_clip_loss *= -1
 
     return text_clip_loss
 
@@ -178,6 +180,7 @@ def calculate_fitness(args, ind):
 
     if args.clip_influence < 1.0:
         classifiers_loss = fitness_classifiers(args, img)
+        classifiers_loss *= (1.0 - args.clip_influence)
         losses.append(classifiers_loss)
 
     if args.clip_influence > 0.0:
@@ -190,7 +193,7 @@ def calculate_fitness(args, ind):
         losses.append(image_clip_loss)
 
     losses = torch.stack(losses)
-    final_loss = torch.mean(losses)
+    final_loss = torch.sum(losses)
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -206,7 +209,7 @@ def main_adam(args):
     a.requires_grad = True
     conditional_vector = CondVectorParameters(a).to(args.device)
 
-    optimizer = optim.Adam(conditional_vector.parameters(), lr=0.1)
+    optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
 
     for gen in range(args.n_gens):
         print("Generation:", gen)

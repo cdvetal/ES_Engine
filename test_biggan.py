@@ -23,14 +23,14 @@ with torch.no_grad():
     text_features = perceptor.encode_text(text_inputs)
 
 num_latents = len(model.config.layers) + 1
-num_cuts = 32
+num_cuts = 64
 normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
 a = torch.rand(num_latents, 256)
 a.requires_grad = True
 conditional_vector = CondVectorParameters(a).to(device)
 
-optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
+optimizer = optim.Adam(conditional_vector.parameters(), lr=0.1)
 
 for i in range(200):
     print(i)
