@@ -11,7 +11,7 @@ import clip
 from torch import optim
 
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
-    get_class_index_list
+    get_class_index_list, CondVectorParameters
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import numpy as np
@@ -204,23 +204,25 @@ def main_adam(args):
 
     renderer = args.renderer
 
-    x = torch.rand(renderer.real_genotype_size)
-    x.requires_grad = True
+    a = torch.rand(renderer.real_genotype_size)
+    a.requires_grad = True
+    conditional_vector = CondVectorParameters(a).to(args.device)
 
-    optimizer = optim.Adam([x], lr=0.1)
+    optimizer = optim.Adam(conditional_vector.parameters(), lr=0.1)
 
     for gen in range(args.n_gens):
         print("Generation:", gen)
         cur_iteration = gen
 
+        cond_vector = conditional_vector()
+
+        loss = calculate_fitness(args, cond_vector)
+
         optimizer.zero_grad()
-
-        loss = calculate_fitness(args, x)
-
         loss[0].backward()
         optimizer.step()
 
-        img_array = renderer.chunks(x)
+        img_array = renderer.chunks(cond_vector)
         img = renderer.render(img_array, cur_iteration=cur_iteration)
         img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 

@@ -28,7 +28,7 @@ normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.2686295
 
 a = torch.rand(num_latents, 256)
 a.requires_grad = True
-conditional_vector = CondVectorParameters(a, num_latents=num_latents).to(device)
+conditional_vector = CondVectorParameters(a).to(device)
 
 optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
 

@@ -243,10 +243,10 @@ def wget_file(url, out):
 
 
 class CondVectorParameters(torch.nn.Module):
-    def __init__(self, ind_numpy, num_latents=15):
+    def __init__(self, ind_numpy):
         super(CondVectorParameters, self).__init__()
-        reshape_array = ind_numpy.reshape(num_latents, -1)
-        self.normu = torch.nn.Parameter(torch.tensor(reshape_array).float())
+        # reshape_array = ind_numpy.reshape(num_latents, -1)
+        self.normu = torch.nn.Parameter(torch.tensor(ind_numpy).float())
         self.thrsh_lat = torch.tensor(1)
         self.thrsh_cls = torch.tensor(1.9)
 
