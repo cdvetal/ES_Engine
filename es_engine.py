@@ -148,8 +148,9 @@ def fitness_clip_prompts(args, img):
     # Calculate clip similarity
     p_s = []
     t_img = F.to_tensor(img).unsqueeze(0).to(args.device)
+    """
     _, channels, sideX, sideY = t_img.shape
-    for ch in range(128):
+    for ch in range(32):  # TODO - Maybe change here
         size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
         offsetx = torch.randint(0, sideX - size, ())
         offsety = torch.randint(0, sideX - size, ())
@@ -157,10 +158,11 @@ def fitness_clip_prompts(args, img):
         p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
     # convert_tensor = torchvision.transforms.ToTensor()
     into = torch.cat(p_s, 0).to(args.device)
-
+    """
     normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
                                                  (0.26862954, 0.26130258, 0.27577711))
-    into = normalize((into + 1) / 2)
+    # into = normalize((into + 1) / 2)
+    into = normalize((t_img + 1) / 2)
 
     image_features = args.clip.encode_image(into)
     text_clip_loss = torch.cosine_similarity(args.text_features, image_features, dim=-1).mean()
@@ -178,17 +180,14 @@ def calculate_fitness(args, ind):
     if args.clip_influence < 1.0:
         classifiers_loss = fitness_classifiers(args, img)
         losses.append(classifiers_loss)
-        print(classifiers_loss)
 
     if args.clip_influence > 0.0:
         text_clip_loss = fitness_clip_prompts(args, img)
-        print(text_clip_loss)
         text_clip_loss *= args.clip_influence
         losses.append(text_clip_loss)
 
     if args.input_image:
         image_clip_loss = fitness_input_image(args, img)
-        print(image_clip_loss)
         losses.append(image_clip_loss)
 
     losses = torch.stack(losses)

@@ -1,3 +1,4 @@
+import numpy as np
 import torchvision.transforms.functional as TF
 
 from render.biggan import BigGAN
@@ -22,7 +23,7 @@ class BigGANRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size
 
     def chunks(self, array):
-        return array.view(self.num_latents, 256)
+        return np.reshape(array, (self.num_latents, 256))
 
     def __str__(self):
         return "biggan"
