@@ -1,4 +1,5 @@
-import cairo
+import random
+
 import numpy as np
 import torch
 from PIL import Image
@@ -14,87 +15,72 @@ class ClipDrawRenderer(RenderingInterface):
         self.num_lines = args.num_lines
         self.img_size = args.img_size
 
-        self.genotype_size = ((3 * 6) + 7)  # 3 segments, 6 values each, plus color (4), width (1), starting point (2)
-        self.real_genotype_size = self.genotype_size * self.num_lines
-
     def chunks(self, array):
         array = torch.tensor(array, dtype=torch.float)
         return array.view(self.num_lines, self.genotype_size)
+
+    def generate_individual(self):
+        # Use GPU if available
+        pydiffvg.set_use_gpu(torch.cuda.is_available())
+        device = torch.device('cuda')
+        pydiffvg.set_device(device)
+
+        canvas_width, canvas_height = self.img_size, self.img_size
+        num_paths = self.num_lines
+        max_width = 5 * canvas_height / 100
+        min_width = 1 * canvas_height / 100
+
+        # Initialize Random Curves
+        shapes = []
+        shape_groups = []
+        for i in range(num_paths):
+            num_segments = random.randint(1, 3)
+            num_control_points = torch.zeros(num_segments, dtype=torch.int32) + 2
+            points = []
+            p0 = (random.random(), random.random())
+            points.append(p0)
+            for j in range(num_segments):
+                radius = 0.1
+                p1 = (p0[0] + radius * (random.random() - 0.5), p0[1] + radius * (random.random() - 0.5))
+                p2 = (p1[0] + radius * (random.random() - 0.5), p1[1] + radius * (random.random() - 0.5))
+                p3 = (p2[0] + radius * (random.random() - 0.5), p2[1] + radius * (random.random() - 0.5))
+                points.append(p1)
+                points.append(p2)
+                points.append(p3)
+                p0 = p3
+            points = torch.tensor(points)
+            points[:, 0] *= canvas_width
+            points[:, 1] *= canvas_height
+            path = pydiffvg.Path(num_control_points=num_control_points, points=points,
+                                 stroke_width=torch.tensor((min_width + max_width) / 4), is_closed=False)
+            shapes.append(path)
+            path_group = pydiffvg.ShapeGroup(shape_ids=torch.tensor([len(shapes) - 1]), fill_color=None,
+                                             stroke_color=torch.tensor(
+                                                 [random.random(), random.random(), random.random(), random.random()]))
+            shape_groups.append(path_group)
+
+        points_vars = []
+        for path in shapes:
+            path.points.requires_grad = True
+            points_vars.append(path.points)
+
+        # self.points_vars = points_vars
+        self.shapes = shapes
+        self.shape_groups = shape_groups
+
+        return points_vars
 
     def __str__(self):
         return "clipdrawer"
 
     def render(self, a, cur_iteration):
-        # split input array into header and rest
-        head = a[:self.header_length]
-        rest = a[self.header_length:]
-
-        # determine background color from header
-        R = head[0][0]
-        G = head[0][1]
-        B = head[0][2]
-
-        # create the image and drawing context
-        # im = Image.new('RGB', (size, size), (R, G, B))
-        # draw = ImageDraw.Draw(im, 'RGB')
-
-        ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
-        cr = cairo.Context(ims)
-
-        cr.set_source_rgba(R, G, B, 1.0)  # everythingon cairo appears to be between 0 and 1
-        cr.rectangle(0, 0, self.img_size, self.img_size)  # define a recatangle and then fill it
-        cr.fill()
-
-        cr.set_line_cap(cairo.LINE_CAP_ROUND)
-        cr.set_line_join(cairo.LINE_JOIN_ROUND)
-
-        max_width = 2.0 * self.img_size / 100
-        min_width = 0.5 * self.img_size / 100
-
-        for e in rest:
-            R = e[0]
-            G = e[1]
-            B = e[2]
-            A = e[3]
-
-            w = map_number(e[4], 0, 1, min_width, max_width)
-
-            cr.set_source_rgba(R, G, B, A)
-            # line width
-            cr.set_line_width(w)
-
-            num_segments = 3
-            p0 = (e[5], e[6])
-
-            ind = 7
-            for j in range(num_segments):
-                radius = 0.1
-                p1 = (p0[0] + radius * (e[ind] - 0.5), p0[1] + radius * (e[ind + 1] - 0.5))
-                p2 = (p1[0] + radius * (e[ind + 2] - 0.5), p1[1] + radius * (e[ind + 3] - 0.5))
-                p3 = (p2[0] + radius * (e[ind + 4] - 0.5), p2[1] + radius * (e[ind + 5] - 0.5))
-
-                ind += 6
-
-                cr.move_to(p0[0] * self.img_size, p0[1] * self.img_size)
-                cr.curve_to(p1[0] * self.img_size, p1[1] * self.img_size, p2[0] * self.img_size, p2[1] * self.img_size, p3[0] * self.img_size,
-                            p3[1] * self.img_size)
-
-                cr.stroke()
-
-                p0 = p3
-
-        pilMode = 'RGB'
-        # argbArray = numpy.fromstring( ims.get_data(), 'c' ).reshape( -1, 4 )
-        argbArray = np.fromstring(bytes(ims.get_data()), 'c').reshape(-1, 4)
-        rgbArray = argbArray[:, 2::-1]
-        pilData = rgbArray.reshape(-1).tostring()
-        pilImage = Image.frombuffer(pilMode,
-                                    (ims.get_width(), ims.get_height()), pilData, "raw",
-                                    pilMode, 0, 1)
-        pilImage = pilImage.convert('RGB')
-        # pilImage.show() # mostra a image no preview
-
-        # draw line with round line caps (circles at the end)
-        # draw.polygon(
-        #   ((x1,y1), (x2,y2), (x3,y3)), (R,G,B), outline=None)
-        return pilImage
+        render = pydiffvg.RenderFunction.apply
+        scene_args = pydiffvg.RenderFunction.serialize_scene(
+            self.img_size, self.img_size, self.shapes, self.shape_groups)
+        img = render(self.img_size, self.img_size, 2, 2, cur_iteration, None, *scene_args)
+        img = img[:, :, 3:4] * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3,
+                                                          device=pydiffvg.get_device()) * (1 - img[:, :, 3:4])
+        img = img[:, :, :3]
+        img = img.unsqueeze(0)
+        img = img.permute(0, 3, 1, 2)  # NHWC -> NCHW
+        return img
