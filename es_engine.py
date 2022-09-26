@@ -421,8 +421,8 @@ if __name__ == "__main__":
     # Get time of start of the evolution
     start_time_evo = time()
     # Main program
-    # main_adam(args)
-    main_cma_es(args)
+    main_adam(args)
+    # main_cma_es(args)
     # Get end time
     end_time = time()
 
