@@ -36,7 +36,7 @@ with torch.no_grad():
 num_cuts = 64
 normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
-cond_vector = CondVectorParameters(np.array(ind), num_latents=num_latents)
+cond_vector = CondVectorParameters(np.array(ind), num_latents=num_latents).to(device)
 
 optimizer = optim.Adam(cond_vector.parameters(), lr=0.07)
 
