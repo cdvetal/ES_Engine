@@ -26,7 +26,6 @@ embed = model.embeddings(classes)
 cond_vector = torch.cat((latent, embed), dim=1)
 ind = cond_vector.cpu().detach().numpy().flatten()
 
-
 latent = torch.nn.Parameter(torch.zeros(num_latents, 128).normal_(std=1).float().cuda())
 
 # Load the model
@@ -36,10 +35,6 @@ text_inputs = clip.tokenize("Darth Vader").to(device)
 
 with torch.no_grad():
     text_features = perceptor.encode_text(text_inputs)
-
-    params_other = torch.zeros(num_latents, 1000).normal_(-3.9, .3).cuda()
-    classes = torch.sigmoid(torch.nn.Parameter(params_other))
-    embed = model.embeddings(classes)
 
 num_cuts = 128
 normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
