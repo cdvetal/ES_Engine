@@ -1,10 +1,8 @@
-import numpy as np
 import torch
 import torchvision.transforms.functional as TF
 
 from render.biggan import BigGAN
 from render.renderinterface import RenderingInterface
-from utils import CondVectorParameters
 
 
 class BigGANRenderer(RenderingInterface):
@@ -32,10 +30,7 @@ class BigGANRenderer(RenderingInterface):
 
     # input: array of real vectors, length 8, each component normalized 0-1
     def render(self, a, cur_iteration):
-        conditional_vector = CondVectorParameters(a, num_latents=self.num_latents).to(self.device)
-
-        cond_vector = conditional_vector()
-        out = self.model(cond_vector, 1)
+        out = self.model(a, 1)
         out = TF.to_pil_image(out.squeeze())
 
         return out
