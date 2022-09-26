@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 from render.renderinterface import RenderingInterface
 
@@ -36,8 +37,8 @@ class FFTRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size * args.num_lines
 
     def chunks(self, array):
-        img = np.array(array)
-        return np.reshape(img, (self.args.num_lines, self.genotype_size))
+        array = torch.tensor(array)
+        return array.view(self.args.num_lines, self.genotype_size)
 
     def __str__(self):
         return "fftdrawer"

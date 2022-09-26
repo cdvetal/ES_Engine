@@ -1,5 +1,6 @@
 import cairo
 import numpy as np
+import torch
 from PIL import Image
 
 from render.renderinterface import RenderingInterface
@@ -17,8 +18,9 @@ class ClipDrawRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size * self.num_lines
 
     def chunks(self, array):
-        img = np.array(array)
-        return np.reshape(img, (self.args.num_lines, self.genotype_size))
+        array = torch.tensor(array)
+        return array.view(self.num_lines, self.genotype_size)
+
 
     def __str__(self):
         return "clipdrawer"

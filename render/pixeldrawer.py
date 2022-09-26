@@ -180,8 +180,6 @@ class PixelRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size * (args.num_lines * args.num_lines)
 
     def chunks(self, array):
-        # img = np.array(array)
-        # return np.reshape(img, (self.num_lines, self.num_lines, self.genotype_size))
         array = torch.tensor(array)
         return array.view(self.num_lines, self.num_lines, self.genotype_size)
 

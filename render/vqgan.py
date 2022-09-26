@@ -122,8 +122,8 @@ class VQGANRenderer(RenderingInterface):
         self.to_pil = torchvision.transforms.ToPILImage()
 
     def chunks(self, array):
-        img = np.array(array)
-        return np.reshape(img, self.z_shape)
+        array = torch.tensor(array)
+        return array.view(self.z_shape)
 
     def vector_quantize(self, x, codebook):
         d = x.pow(2).sum(dim=-1, keepdim=True) + codebook.pow(2).sum(dim=1) - 2 * x @ codebook.T
