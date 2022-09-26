@@ -32,7 +32,7 @@ conditional_vector = CondVectorParameters(a, num_latents=num_latents).to(device)
 
 optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
 
-for i in range(100):
+for i in range(200):
     print(i)
 
     cond_vector = conditional_vector()
@@ -55,7 +55,8 @@ for i in range(100):
     cos_similarity = F.cosine_similarity(text_features, iii, dim=-1).mean()
     cos_similarity = -100 * cos_similarity
 
-    print(cos_similarity.grad)
+    print(cos_similarity)
+
     optimizer.zero_grad()
     cos_similarity.backward()
     optimizer.step()
