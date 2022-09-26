@@ -205,31 +205,30 @@ def main_adam(args):
 
     renderer = args.renderer
 
-    a = torch.rand(renderer.real_genotype_size)
-    a.requires_grad = True
-    conditional_vector = CondVectorParameters(a).to(args.device)
+    ind = renderer.generate_individual()
+    ind.requires_grad = True
 
-    optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
+    optimizer = optim.Adam([ind], lr=0.07)
 
     for gen in range(args.n_gens):
         print("Generation:", gen)
         cur_iteration = gen
 
-        cond_vector = conditional_vector()
-
-        loss = calculate_fitness(args, cond_vector)
+        loss = calculate_fitness(args, ind)
 
         optimizer.zero_grad()
         loss[0].backward()
         optimizer.step()
 
-        img_array = renderer.chunks(cond_vector)
+        img_array = renderer.chunks(ind)
         img = renderer.render(img_array, cur_iteration=cur_iteration)
         img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
 
 def main_cma_es(args):
     global cur_iteration
+
+    renderer = args.renderer
 
     # The CMA-ES algorithm takes a population of one individual as argument
     # The centroid is set to a vector of 5.0 see http://www.lri.fr/~hansen/cmaes_inmatlab.html
@@ -239,7 +238,7 @@ def main_cma_es(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", calculate_fitness, args)
-    strategy = cma.Strategy(centroid=args.renderer.generate_individual(), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
+    strategy = cma.Strategy(centroid=renderer.generate_individual(), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
@@ -252,8 +251,6 @@ def main_cma_es(args):
 
     logbook = tools.Logbook()
     logbook.header = "gen", "evals", "std", "min", "avg", "max"
-
-    renderer = args.renderer
 
     for gen in range(args.n_gens):
         print("Generation:", gen)
