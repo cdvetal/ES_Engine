@@ -17,6 +17,7 @@ model.to(device).eval()
 
 num_latents = len(model.config.layers) + 1
 
+"""
 z_dim = 128
 latent = torch.nn.Parameter(torch.zeros(num_latents, z_dim).normal_(std=1).float().cuda())
 params_other = torch.zeros(num_latents, 1000).normal_(-3.9, .3).cuda()
@@ -24,6 +25,12 @@ classes = torch.sigmoid(torch.nn.Parameter(params_other))
 embed = model.embeddings(classes)
 cond_vector = torch.cat((latent, embed), dim=1)
 ind = cond_vector.cpu().detach().numpy().flatten()
+"""
+
+latent = torch.nn.Parameter(torch.zeros(num_latents, 128).normal_(std=1).float().cuda())
+params_other = torch.zeros(num_latents, 1000).normal_(-3.9, .3).cuda()
+classes = torch.sigmoid(torch.nn.Parameter(params_other))
+embed = model.embeddings(classes)
 
 # Load the model
 perceptor, preprocess = clip.load('ViT-B/32', device)
@@ -33,19 +40,20 @@ text_inputs = clip.tokenize("Darth Vader").to(device)
 with torch.no_grad():
     text_features = perceptor.encode_text(text_inputs)
 
-num_cuts = 64
+num_cuts = 128
 normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
-cond_vector = CondVectorParameters(np.array(ind), num_latents=num_latents).to(device)
+# cond_vector = CondVectorParameters(np.array(la), num_latents=num_latents).to(device)
 
-optimizer = optim.Adam(cond_vector.parameters(), lr=0.07)
+optimizer = optim.Adam([latent], lr=0.07)
 
 for i in range(200):
     print(i)
 
-    c = cond_vector()
+    cond_vector = torch.cat((latent, embed), dim=1)
+    ind = cond_vector.cpu().detach().numpy().flatten()
 
-    out = model(c, 1)
+    out = model(ind, 1)
 
     p_s = []
     _, channels, sideX, sideY = out.shape
@@ -62,15 +70,17 @@ for i in range(200):
     iii = perceptor.encode_image(into)  # 128 x 512
 
     cos_similarity = F.cosine_similarity(text_features, iii, dim=-1).mean()
-    cos_similarity = -100 * cos_similarity
 
     print(cos_similarity)
+
+    cos_similarity = -1 * cos_similarity
 
     optimizer.zero_grad()
     cos_similarity.backward()
     optimizer.step()
 
-c = cond_vector()
-out = model(c, 1)
+cond_vector = torch.cat((latent, embed), dim=1)
+ind = cond_vector.cpu().detach().numpy().flatten()
+out = model(ind, 1)
 out = TF.to_pil_image(out.squeeze())
 out.save("out.png")
