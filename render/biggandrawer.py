@@ -43,7 +43,7 @@ class BigGANRenderer(RenderingInterface):
         a = a.float().to(self.device)
 
         out = self.model(a, 1)
-        out = TF.to_pil_image(out.squeeze())
+        # out = TF.to_pil_image(out.squeeze())
 
         return out
 

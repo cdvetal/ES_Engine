@@ -11,7 +11,7 @@ import clip
 from torch import optim
 
 from utils import save_gen_best, create_save_folder, get_active_models_from_arg, open_class_mapping, \
-    get_class_index_list, CondVectorParameters
+    get_class_index_list
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import numpy as np
@@ -148,14 +148,14 @@ def fitness_clip_prompts(args, img):
 
     # Calculate clip similarity
     p_s = []
-    t_img = F.to_tensor(img).unsqueeze(0).to(args.device)
+    # t_img = F.to_tensor(img).unsqueeze(0).to(args.device)
 
-    _, channels, sideX, sideY = t_img.shape
+    _, channels, sideX, sideY = img.shape
     for ch in range(16):  # TODO - Maybe change here
         size = int(sideX * torch.zeros(1, ).normal_(mean=.8, std=.3).clip(.5, .95))
         offsetx = torch.randint(0, sideX - size, ())
         offsety = torch.randint(0, sideX - size, ())
-        apper = t_img[:, :, offsetx:offsetx + size, offsety:offsety + size]
+        apper = img[:, :, offsetx:offsetx + size, offsety:offsety + size]
         p_s.append(torch.nn.functional.interpolate(apper, (224, 224), mode='nearest'))
     # convert_tensor = torchvision.transforms.ToTensor()
     into = torch.cat(p_s, 0).to(args.device)
@@ -206,6 +206,7 @@ def main_adam(args):
     renderer = args.renderer
 
     ind = renderer.generate_individual()
+    ind = torch.tensor(ind)
     ind.requires_grad = True
 
     optimizer = optim.Adam([ind], lr=0.07)
@@ -222,7 +223,9 @@ def main_adam(args):
 
         img_array = renderer.chunks(ind)
         img = renderer.render(img_array, cur_iteration=cur_iteration)
+        img = F.to_pil_image(img.squeeze())
         img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
+
 
 
 def main_cma_es(args):
