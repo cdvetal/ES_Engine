@@ -63,5 +63,5 @@ for i in range(200):
 
 cond_vector = conditional_vector()
 out = model(cond_vector, 1)
-out = TF.to_pil_image(out)
+out = TF.to_pil_image(out.squeeze())
 out.save("out.png")
