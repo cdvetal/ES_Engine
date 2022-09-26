@@ -256,7 +256,7 @@ def main_cma_es(args):
         # Evaluate the individuals
         fitnesses = toolbox.map(toolbox.evaluate, population)
         for ind, fit in zip(population, fitnesses):
-            fit = fit[0].cpu().detach().numpy()
+            fit = fit[0].cpu()
             ind.fitness.values = [fit]
 
         if args.save_all:
