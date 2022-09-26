@@ -14,6 +14,17 @@ output_size = 256
 model = BigGAN.from_pretrained(f'biggan-deep-{output_size}')
 model.to(device).eval()
 
+z_dim = 128
+latent = torch.nn.Parameter(torch.zeros(14, z_dim).normal_(std=1).float().cuda())
+params_other = torch.zeros(14, 1000).normal_(-3.9, .3).cuda()
+classes = torch.sigmoid(torch.nn.Parameter(params_other))
+embed = model.embeddings(classes)
+cond_vector = torch.cat((latent, embed), dim=1)
+ind = cond_vector.cpu().detach().numpy().flatten()
+
+print(ind)
+
+"""
 # Load the model
 perceptor, preprocess = clip.load('ViT-B/32', device)
 
@@ -66,3 +77,4 @@ cond_vector = conditional_vector()
 out = model(cond_vector, 1)
 out = TF.to_pil_image(out.squeeze())
 out.save("out.png")
+"""
