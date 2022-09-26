@@ -18,9 +18,8 @@ class ClipDrawRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size * self.num_lines
 
     def chunks(self, array):
-        array = torch.tensor(array)
+        array = torch.tensor(array, dtype=torch.float)
         return array.view(self.num_lines, self.genotype_size)
-
 
     def __str__(self):
         return "clipdrawer"

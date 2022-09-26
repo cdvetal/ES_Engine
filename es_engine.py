@@ -176,23 +176,28 @@ def calculate_fitness(args, ind):
     img_array = args.renderer.chunks(ind)
     img = args.renderer.render(img_array, cur_iteration=cur_iteration)
 
-    losses = []
-
     if args.clip_influence < 1.0:
-        classifiers_loss = fitness_classifiers(args, img)
-        losses.append(classifiers_loss)
+        loss1 = fitness_classifiers(args, img)
+        # losses.append(classifiers_loss)
+    else:
+        loss1 = 0.0
 
     if args.clip_influence > 0.0:
-        text_clip_loss = fitness_clip_prompts(args, img)
-        text_clip_loss *= args.clip_influence
-        losses.append(text_clip_loss)
+        loss2 = fitness_clip_prompts(args, img)
+        loss2 *= args.clip_influence
+        # losses.append(text_clip_loss)
+    else:
+        loss2 = 0.0
 
     if args.input_image:
-        image_clip_loss = fitness_input_image(args, img)
-        losses.append(image_clip_loss)
+        loss3 = fitness_input_image(args, img)
+        # losses.append(image_clip_loss)
+    else:
+        loss3 = 0.0
 
-    losses = torch.stack(losses)
-    final_loss = torch.mean(losses)
+    # losses = torch.stack(losses)
+    # final_loss = torch.mean(losses)
+    final_loss = loss1 + loss2 + loss3
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]

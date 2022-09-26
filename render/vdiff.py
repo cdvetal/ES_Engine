@@ -98,7 +98,7 @@ class VDiffRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size
 
     def chunks(self, array):
-        array = torch.tensor(array)
+        array = torch.tensor(array, dtype=torch.float)
         return array.view(1, 3, self.gen_height, self.gen_width)
 
     def __str__(self):

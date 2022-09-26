@@ -122,7 +122,7 @@ class VQGANRenderer(RenderingInterface):
         self.to_pil = torchvision.transforms.ToPILImage()
 
     def chunks(self, array):
-        array = torch.tensor(array)
+        array = torch.tensor(array, dtype=torch.float)
         return array.view(self.z_shape)
 
     def vector_quantize(self, x, codebook):

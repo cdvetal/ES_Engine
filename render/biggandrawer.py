@@ -22,7 +22,7 @@ class BigGANRenderer(RenderingInterface):
         self.real_genotype_size = self.genotype_size
 
     def chunks(self, array):
-        array = torch.tensor(array)
+        array = torch.tensor(array, dtype=torch.float)
         return array.view(self.num_latents, 256)
 
     def __str__(self):
@@ -30,6 +30,8 @@ class BigGANRenderer(RenderingInterface):
 
     # input: array of real vectors, length 8, each component normalized 0-1
     def render(self, a, cur_iteration):
+        a = a.float().to(self.device)
+
         out = self.model(a, 1)
         out = TF.to_pil_image(out.squeeze())
 
