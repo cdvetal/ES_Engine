@@ -18,7 +18,9 @@ model.to(device).eval()
 perceptor, preprocess = clip.load('ViT-B/32', device)
 
 text_inputs = clip.tokenize("Darth Vader").to(device)
-text_features = perceptor.encode_text(text_inputs)
+
+with torch.no_grad():
+    text_features = perceptor.encode_text(text_inputs)
 
 num_latents = len(model.config.layers) + 1
 num_cuts = 128
@@ -55,6 +57,7 @@ for i in range(100):
     cos_similarity = F.cosine_similarity(text_features, iii, dim=-1).mean()
     cos_similarity = -100 * cos_similarity
 
+    print(cos_similarity.grad)
     optimizer.zero_grad()
     cos_similarity.backward()
     optimizer.step()

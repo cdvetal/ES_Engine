@@ -130,9 +130,6 @@ def fitness_input_image(args, img):
         args.clip = model
         args.preprocess = preprocess
 
-    image = args.preprocess(Image.open(args.input_image)).unsqueeze(0).to(args.device)
-    args.image_features = args.clip.encode_image(image)
-
     # Calculate clip similarity
     trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     img_t = trans(img).unsqueeze(0).to(args.device)
@@ -219,7 +216,6 @@ def main_adam(args):
 
         optimizer.zero_grad()
 
-        # loss = calculate_fitness(args, x.detach().numpy())
         loss = calculate_fitness(args, x)
 
         loss[0].backward()
@@ -377,7 +373,9 @@ def setup_args():
         else:
             text_inputs = clip.tokenize(args.clip_prompts).to(args.device)
 
-        args.text_features = model.encode_text(text_inputs)
+        with torch.no_grad():
+            args.text_features = model.encode_text(text_inputs)
+
         args.clip = model
         print("CLIP module loaded.")
 
@@ -389,6 +387,10 @@ def setup_args():
         if not os.path.exists(args.input_image):
             print("Image file does not exist. Ignoring..")
             args.input_image = None
+        else:
+            image = args.preprocess(Image.open(args.input_image)).unsqueeze(0).to(args.device)
+            with torch.no_grad():
+                args.image_features = args.clip.encode_image(image)
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
