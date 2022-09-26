@@ -228,20 +228,20 @@ def main_cma_es(args):
     # The centroid is set to a vector of 5.0 see http://www.lri.fr/~hansen/cmaes_inmatlab.html
     # for more details about the rastrigin and other tests for CMA-ES
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Individual", np.ndarray, fitness=creator.FitnessMax)
+    creator.create("Individual", torch.tensor, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", calculate_fitness, args)
-    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.real_genotype_size), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
+    strategy = cma.Strategy(centroid=torch.tensor(np.random.normal(args.init_mu, args.init_sigma, args.renderer.real_genotype_size)), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
-    halloffame = tools.HallOfFame(1, similar=np.array_equal)
+    halloffame = tools.HallOfFame(1, similar=torch.equal)
     stats = tools.Statistics(lambda ind: ind.fitness.values)
-    stats.register("avg", np.mean)
-    stats.register("std", np.std)
-    stats.register("min", np.min)
-    stats.register("max", np.max)
+    stats.register("avg", torch.mean)
+    stats.register("std", torch.std)
+    stats.register("min", torch.min)
+    stats.register("max", torch.max)
 
     logbook = tools.Logbook()
     logbook.header = "gen", "evals", "std", "min", "avg", "max"
@@ -256,7 +256,8 @@ def main_cma_es(args):
         # Evaluate the individuals
         fitnesses = toolbox.map(toolbox.evaluate, population)
         for ind, fit in zip(population, fitnesses):
-            ind.fitness.values = fit
+            fit = fit[0].cpu().detach().numpy()
+            ind.fitness.values = [fit]
 
         if args.save_all:
             for index, ind in enumerate(population):
