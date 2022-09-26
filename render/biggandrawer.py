@@ -21,6 +21,16 @@ class BigGANRenderer(RenderingInterface):
         self.genotype_size = (self.num_latents * 256)
         self.real_genotype_size = self.genotype_size
 
+    def generate_individual(self):
+        z_dim = 128
+        latent = torch.nn.Parameter(torch.zeros(self.num_latents, z_dim).normal_(std=1).float().cuda())
+        params_other = torch.zeros(self.num_latents, 1000).normal_(-3.9, .3).cuda()
+        classes = torch.sigmoid(torch.nn.Parameter(params_other))
+        embed = self.model.embeddings(classes)
+        cond_vector = torch.cat((latent, embed), dim=1)
+        ind = cond_vector.cpu().detach().numpy().flatten()
+        return ind
+
     def chunks(self, array):
         array = torch.tensor(array, dtype=torch.float)
         return array.view(self.num_latents, 256)

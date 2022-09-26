@@ -239,7 +239,7 @@ def main_cma_es(args):
 
     toolbox = base.Toolbox()
     toolbox.register("evaluate", calculate_fitness, args)
-    strategy = cma.Strategy(centroid=np.random.normal(args.init_mu, args.init_sigma, args.renderer.real_genotype_size), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
+    strategy = cma.Strategy(centroid=args.renderer.generate_individual(), sigma=args.sigma, lambda_=args.pop_size)  # The genotype size already has the number of lines
     toolbox.register("generate", strategy.generate, creator.Individual)
     toolbox.register("update", strategy.update)
 
