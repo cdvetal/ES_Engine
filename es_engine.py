@@ -220,6 +220,10 @@ def main_adam(args):
         loss[0].backward()
         optimizer.step()
 
+        img_array = renderer.chunks(x)
+        img = renderer.render(img_array, cur_iteration=cur_iteration)
+        img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
+
 
 def main_cma_es(args):
     global cur_iteration
