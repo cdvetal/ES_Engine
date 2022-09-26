@@ -28,17 +28,15 @@ normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.2686295
 
 a = torch.rand(num_latents, 256)
 a.requires_grad = True
-# conditional_vector = CondVectorParameters(a, num_latents=num_latents).to(device)
+conditional_vector = CondVectorParameters(a, num_latents=num_latents).to(device)
 
-# optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
-optimizer = optim.Adam([a], lr=0.07)
+optimizer = optim.Adam(conditional_vector.parameters(), lr=0.07)
 
 for i in range(100):
     print(i)
 
-    # cond_vector = conditional_vector()
-    # out = model(cond_vector, 1)
-    out = model(a, 1)
+    cond_vector = conditional_vector()
+    out = model(cond_vector, 1)
 
     p_s = []
     _, channels, sideX, sideY = out.shape
@@ -62,8 +60,7 @@ for i in range(100):
     cos_similarity.backward()
     optimizer.step()
 
-# cond_vector = conditional_vector()
-# out = model(cond_vector, 1)
-out = model(a, 1)
+cond_vector = conditional_vector()
+out = model(cond_vector, 1)
 out = TF.to_pil_image(out)
 out.save("out.png")
