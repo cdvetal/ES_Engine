@@ -172,7 +172,6 @@ def fitness_clip_prompts(args, img):
 
 
 def calculate_fitness(args, ind):
-    ind = torch.tensor(ind)
     # build lists of images at all needed sizes
     img_array = args.renderer.chunks(ind)
     img = args.renderer.render(img_array, cur_iteration=cur_iteration)
