@@ -43,6 +43,6 @@ class FFTRenderer(RenderingInterface):
     def __str__(self):
         return "fftdrawer"
 
-    def render(self, a, cur_iteration):
+    def render(self, a):
         pass
 

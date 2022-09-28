@@ -1,40 +1,39 @@
 import random
 
-import numpy as np
 import torch
-from PIL import Image
+import pydiffvg
 
 from render.renderinterface import RenderingInterface
-from utils import map_number
 
 
 class ClipDrawRenderer(RenderingInterface):
     def __init__(self, args):
         super(ClipDrawRenderer, self).__init__(args)
 
+        self.device = args.device
+
         self.num_lines = args.num_lines
         self.img_size = args.img_size
 
     def chunks(self, array):
-        array = torch.tensor(array, dtype=torch.float)
-        return array.view(self.num_lines, self.genotype_size)
+        # array = torch.tensor(array, dtype=torch.float)
+        # return array.view(self.num_lines, self.genotype_size)
+        return array
 
     def generate_individual(self):
         # Use GPU if available
         pydiffvg.set_use_gpu(torch.cuda.is_available())
-        device = torch.device('cuda')
-        pydiffvg.set_device(device)
+        pydiffvg.set_device(self.device)
 
-        canvas_width, canvas_height = self.img_size, self.img_size
-        num_paths = self.num_lines
-        max_width = 5 * canvas_height / 100
-        min_width = 1 * canvas_height / 100
+        max_width = 5 * self.img_size / 100
+        min_width = 1 * self.img_size / 100
 
         # Initialize Random Curves
         shapes = []
         shape_groups = []
-        for i in range(num_paths):
-            num_segments = random.randint(1, 3)
+        for i in range(self.num_lines):
+            # num_segments = random.randint(1, 3)
+            num_segments = 2
             num_control_points = torch.zeros(num_segments, dtype=torch.int32) + 2
             points = []
             p0 = (random.random(), random.random())
@@ -49,8 +48,8 @@ class ClipDrawRenderer(RenderingInterface):
                 points.append(p3)
                 p0 = p3
             points = torch.tensor(points)
-            points[:, 0] *= canvas_width
-            points[:, 1] *= canvas_height
+            points[:, 0] *= self.img_size
+            points[:, 1] *= self.img_size
             path = pydiffvg.Path(num_control_points=num_control_points, points=points,
                                  stroke_width=torch.tensor((min_width + max_width) / 4), is_closed=False)
             shapes.append(path)
@@ -61,23 +60,20 @@ class ClipDrawRenderer(RenderingInterface):
 
         points_vars = []
         for path in shapes:
-            path.points.requires_grad = True
             points_vars.append(path.points)
-
-        # self.points_vars = points_vars
-        self.shapes = shapes
-        self.shape_groups = shape_groups
+            print(len(path.points))
 
         return points_vars
 
     def __str__(self):
-        return "clipdrawer"
+        return "clipdraw"
 
-    def render(self, a, cur_iteration):
+    def render(self, a):
         render = pydiffvg.RenderFunction.apply
+
         scene_args = pydiffvg.RenderFunction.serialize_scene(
             self.img_size, self.img_size, self.shapes, self.shape_groups)
-        img = render(self.img_size, self.img_size, 2, 2, cur_iteration, None, *scene_args)
+        img = render(self.img_size, self.img_size, 2, 2, 0, None, *scene_args)
         img = img[:, :, 3:4] * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3,
                                                           device=pydiffvg.get_device()) * (1 - img[:, :, 3:4])
         img = img[:, :, :3]

@@ -8,20 +8,24 @@ NUM_LINES = 8
 SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
-POP_SIZE = 100
+POP_SIZE = 15
 N_GENS = 200
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25
-SIGMA = 0.2
+SIGMA = 0.1
 
-TARGET_FITNESS = 0.999
+LAMARCK = True
+ADAM_STEPS = 5
+LR = 0.07
+
+TARGET_FITNESS = 99.999
 RANDOM_SEED = None
 
 FROM_CHECKPOINT = None  # None or "Experiment_name.pkl""
 
-NETWORKS = "mobilenet"  # mobilenet,vgg16
-CLIP_INFLUENCE = 0.0
+NETWORKS = ""  # mobilenet,vgg16
+CLIP_INFLUENCE = 1.0
 CLIP_MODEL = "ViT-B/32"
 
 TARGET_CLASS = "birdhouse"
@@ -29,7 +33,7 @@ TARGET_CLASS = "birdhouse"
 SAVE_ALL = False
 VERBOSE = False
 
-RENDERER = "pixel"
+RENDERER = "biggan"
 
 model_groups = {
     "london,": "xception,vgg16,vgg19,resnet50,resnet50v2,resnet101,resnet152,resnet101v2,resnet152v2,inceptionv3,inceptionresnetv2,mobilenet,mobilenetv2,densenet121,densenet169,densenet201,nasnet,nasnetmobile,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7,",

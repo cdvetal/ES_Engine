@@ -46,7 +46,7 @@ class FastPixelRenderer(RenderingInterface):
     def __str__(self):
         return "fastpixel"
 
-    def render(self, a, cur_iteration):
+    def render(self, a):
         a = torch.tensor(a).float().to(self.device)
 
         # out = F.interpolate((a + 1) / 2, size=self.pixel_size, mode="bilinear", align_corners=False)

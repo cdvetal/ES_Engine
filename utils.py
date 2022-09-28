@@ -8,6 +8,7 @@ import sys
 
 import numpy as np
 import torch
+from torchvision.transforms import functional as TF
 
 from config import model_groups
 
@@ -243,7 +244,7 @@ def wget_file(url, out):
 
 
 class CondVectorParameters(torch.nn.Module):
-    def __init__(self, ind_numpy, num_latents):
+    def __init__(self, ind_numpy, num_latents=15):
         super(CondVectorParameters, self).__init__()
         reshape_array = ind_numpy.reshape(num_latents, -1)
         self.normu = torch.nn.Parameter(torch.tensor(reshape_array).float())
@@ -265,3 +266,18 @@ class CondVectorParameters(torch.nn.Module):
     #         return self.normu#, torch.sigmoid(self.cls)
     def forward(self):
         return self.normu
+
+
+def to_image(img):
+    """
+    # img = (img + 1) / 2
+    img = img.detach().cpu().numpy()[0]
+    img = np.transpose(img, (1, 2, 0))
+    img = np.clip(img, 0, 1)
+    img = np.uint8(img * 254)
+    # img = np.repeat(img, 4, axis=0)
+    # img = np.repeat(img, 4, axis=1)
+    pimg = Image.fromarray(img, mode="RGB")
+    """
+    img = TF.to_pil_image(img[0].cpu())
+    return img

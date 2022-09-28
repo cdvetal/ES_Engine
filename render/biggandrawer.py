@@ -1,5 +1,4 @@
 import torch
-import torchvision.transforms.functional as TF
 
 from render.biggan import BigGAN
 from render.renderinterface import RenderingInterface
@@ -33,18 +32,17 @@ class BigGANRenderer(RenderingInterface):
         return ind
 
     def chunks(self, array):
-        array = torch.tensor(array, dtype=torch.float)
+        # if type(array) is list:
+        #     array = torch.tensor(array).float()
         return array.view(self.num_latents, 256)
 
     def __str__(self):
         return "biggan"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, a, cur_iteration):
-        a = a.float().to(self.device)
-
-        out = self.model(a, 0.4)
-        out = TF.to_pil_image(out.squeeze())
+    def render(self, a):
+        a = a.to(self.device)
+        out = self.model(a, 1)
 
         return out
 

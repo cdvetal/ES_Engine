@@ -186,7 +186,7 @@ class PixelRenderer(RenderingInterface):
     def __str__(self):
         return "pixel"
 
-    def render(self, a, cur_iteration):
+    def render(self, a):
         ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.img_size, self.img_size)
         cr = cairo.Context(ims)
 

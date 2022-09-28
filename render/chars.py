@@ -27,7 +27,7 @@ class CharsRenderer(RenderingInterface):
     def __str__(self):
         return "chars"
 
-    def render(self, a, cur_iteration):
+    def render(self, a):
         """
         @a: array of real vectors, length 8, each component normalized 0-1
         """
