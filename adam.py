@@ -6,8 +6,6 @@ from PIL.Image import Resampling
 from torch import optim
 from torchvision.utils import save_image
 
-from utils import CondVectorParameters
-
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import torch
 import torchvision.transforms as transforms
@@ -144,13 +142,7 @@ def fitness_clip_prompts(args, img):
     return text_clip_loss
 
 
-def calculate_fitness(args, ind):
-    renderer = args.renderer
-
-    # build lists of images at all needed sizes
-    # img_array = renderer.chunks(ind)
-    img = renderer.render(ind)
-
+def calculate_fitness(args, img):
     losses = []
 
     if args.clip_influence < 1.0:
@@ -181,18 +173,16 @@ def main_adam(args):
     renderer = args.renderer
 
     individual = renderer.generate_individual()
+    individual = renderer.to_adam(individual)
 
-    if type(individual) is not list:
-        individual = torch.nn.Parameter(torch.tensor(individual).float())
-        optimizer = optim.Adam([individual], lr=args.lr)
-    else:
-        optimizer = optim.Adam(individual, lr=args.lr)
+    optimizer = optim.Adam(individual, lr=args.lr)
 
     for gen in range(args.n_gens):
         print("Generation:", gen)
         cur_iteration = gen
 
-        loss = calculate_fitness(args, individual)
+        img = renderer.render(individual)
+        loss = calculate_fitness(args, img)
 
         optimizer.zero_grad()
         (-loss[0]).backward()
@@ -200,8 +190,13 @@ def main_adam(args):
 
         print(loss[0])
 
-        img = renderer.render(individual)
-        img = (img + 1) / 2
+        if args.renderer_type == "vdiff" and gen >= 1:
+            lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
+            renderer.x = renderer.makenoise(gen)
+            renderer.x.requires_grad_()
+            to_optimize = [renderer.x]
+            optimizer = optim.Adam(to_optimize, lr=min(lr * 0.001, 0.01))
+        else:
+            img = (img + 1) / 2
+
         save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
-        # img = to_image(img)
-        # img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")

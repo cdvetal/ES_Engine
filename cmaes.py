@@ -15,7 +15,7 @@ from deap import tools
 from torch import optim
 from torchvision.utils import save_image
 
-from utils import save_gen_best, CondVectorParameters
+from utils import save_gen_best
 
 cur_iteration = 0
 
@@ -149,13 +149,7 @@ def fitness_clip_prompts(args, img):
     return text_clip_loss
 
 
-def calculate_fitness(args, cond_vector):
-    renderer = args.renderer
-
-    # build lists of images at all needed sizes
-    img_array = args.renderer.chunks(cond_vector)
-    img = renderer.render(img_array)
-
+def calculate_fitness(args, img):
     losses = []
 
     if args.clip_influence < 1.0:
@@ -179,26 +173,30 @@ def calculate_fitness(args, cond_vector):
 
 
 def evaluate(args, individual):
-    # TODO - Lemarck
     # TODO - Renderers - line_sketch
     # TODO - Test Adam optimize all losses and combinations
 
-    ind = torch.nn.Parameter(torch.tensor(individual).float())
-    optimizer = optim.Adam([ind], lr=args.lr)
+    renderer = args.renderer
 
-    final_loss = calculate_fitness(args, ind)
+    ind = renderer.to_adam(individual)
+
+    optimizer = optim.Adam(ind, lr=args.lr)
+
+    img = renderer.render(ind)
+    final_loss = calculate_fitness(args, img)
 
     for gen in range(args.adam_steps):
         optimizer.zero_grad()
         (-final_loss).backward()
         optimizer.step()
 
-        final_loss = calculate_fitness(args, ind)
+        img = renderer.render(ind)
+        final_loss = calculate_fitness(args, img)
 
     print(final_loss)
 
     if args.lamarck:
-        individual[:] = ind.cpu().detach().numpy().flatten()
+        individual[:] = renderer.get_individual(ind)
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -266,9 +264,8 @@ def main_cma_es(args):
         if halloffame is not None:
             save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
             print("Best individual:", halloffame[0].fitness.values)
-            cond_vector_parameters = CondVectorParameters(halloffame[0], num_latents=renderer.num_latents)
-            cond_vector = cond_vector_parameters()
-            img = renderer.render(cond_vector)
+            ind = renderer.to_adam(halloffame[0])
+            img = renderer.render(ind)
             img = (img + 1) / 2
             save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 

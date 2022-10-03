@@ -1,23 +1,24 @@
 # IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
-IMG_SIZE = 256
+IMG_SIZE = 512
 
 EVOLUTION_TYPE = 'cmaes'
 
-NUM_LINES = 8
+NUM_LINES = 40
 
 SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
-POP_SIZE = 15
-N_GENS = 200
+POP_SIZE = 2
+N_GENS = 100
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25
 SIGMA = 0.1
 
 LAMARCK = True
-ADAM_STEPS = 5
-LR = 0.07
+ADAM_STEPS = 50
+# LR = 0.07
+LR = 0.01
 
 TARGET_FITNESS = 99.999
 RANDOM_SEED = None
@@ -33,7 +34,7 @@ TARGET_CLASS = "birdhouse"
 SAVE_ALL = False
 VERBOSE = False
 
-RENDERER = "biggan"
+RENDERER = "vdiff"
 
 model_groups = {
     "london,": "xception,vgg16,vgg19,resnet50,resnet50v2,resnet101,resnet152,resnet101v2,resnet152v2,inceptionv3,inceptionresnetv2,mobilenet,mobilenetv2,densenet121,densenet169,densenet201,nasnet,nasnetmobile,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7,",

@@ -2,8 +2,7 @@ import torch
 
 from render import *
 
-from es_engine import setup_args
-from render.vdiff import VDiffRenderer
+from main import setup_args
 
 args = setup_args()
 

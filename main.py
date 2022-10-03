@@ -4,6 +4,7 @@ from datetime import datetime
 from time import time
 
 import clip
+import pydiffvg
 from PIL import Image
 
 from adam import main_adam
@@ -23,11 +24,13 @@ render_table = {
     "pylinhas": PylinhasRenderer,
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
-    "pixel": PixelRenderer,
+    "pixeldraw": PixelRenderer,
     # "vqgan": VQGANRenderer,
     "clipdraw": ClipDrawRenderer,
-    # "vdiff": VDiffRenderer,
+    "vdiff": VDiffRenderer,
     "biggan": BigGANRenderer,
+    "linedraw": LineDrawRenderer,
+    "fftdraw": FFTRenderer,
 }
 
 
@@ -43,7 +46,7 @@ def setup_args():
     parser.add_argument('--checkpoint-freq', default=CHECKPOINT_FREQ, type=int, help='Checkpoint save frequency. Default is {}.'.format(CHECKPOINT_FREQ))
     parser.add_argument('--verbose', default=VERBOSE, action='store_true', help='Verbose. Default is {}.'.format(VERBOSE))
     parser.add_argument('--num-lines', default=NUM_LINES, type=int, help="Number of lines. Default is {}".format(NUM_LINES))
-    parser.add_argument('--renderer', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
+    parser.add_argument('--renderer-type', default=RENDERER, help="Choose the renderer. Default is {}".format(RENDERER))
     parser.add_argument('--img-size', default=IMG_SIZE, type=int, help='Image dimensions during testing. Default is {}.'.format(IMG_SIZE))
     parser.add_argument('--target-class', default=TARGET_CLASS, help='Which target classes to optimize. Default is {}.'.format(TARGET_CLASS))
     parser.add_argument("--networks", default=NETWORKS, help="comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
@@ -62,7 +65,7 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "Darth Vader"
+    args.clip_prompts = "A jack-o'-lantern"
 
     class_mapping = open_class_mapping()
     if args.target_class is None or args.target_class == "none":
@@ -83,7 +86,11 @@ def setup_args():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Using device:", args.device)
 
-    args.renderer = render_table[args.renderer](args)
+    # Use GPU if available
+    pydiffvg.set_use_gpu(torch.cuda.is_available())
+    pydiffvg.set_device(args.device)
+
+    args.renderer = render_table[args.renderer_type](args)
 
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())

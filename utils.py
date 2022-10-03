@@ -1,14 +1,12 @@
 import csv
 import importlib
 import json
-import math
 import os
 import subprocess
 import sys
 
+import math
 import numpy as np
-import torch
-from torchvision.transforms import functional as TF
 
 from config import model_groups
 
@@ -241,43 +239,3 @@ def wget_file(url, out):
     except subprocess.CalledProcessError as cpe:
         output = cpe.output
         print("Ignoring non-zero exit: ", output)
-
-
-class CondVectorParameters(torch.nn.Module):
-    def __init__(self, ind_numpy, num_latents=15):
-        super(CondVectorParameters, self).__init__()
-        reshape_array = ind_numpy.reshape(num_latents, -1)
-        self.normu = torch.nn.Parameter(torch.tensor(reshape_array).float())
-        self.thrsh_lat = torch.tensor(1)
-        self.thrsh_cls = torch.tensor(1.9)
-
-    #  def forward(self):
-    # return self.ff2(self.ff1(self.latent_code)), torch.softmax(1000*self.ff4(self.ff3(self.cls)), -1)
-    #   return self.normu, torch.sigmoid(self.cls)
-
-    # def forward(self):
-    #     global CCOUNT
-    #     if (CCOUNT < -10):
-    #         self.normu,self.cls = copiado(self.normu, self.cls)
-    #     if (MAX_CLASSES > 0):
-    #         classes = differentiable_topk(self.cls, MAX_CLASSES)
-    #         return self.normu, classes
-    #     else:
-    #         return self.normu#, torch.sigmoid(self.cls)
-    def forward(self):
-        return self.normu
-
-
-def to_image(img):
-    """
-    # img = (img + 1) / 2
-    img = img.detach().cpu().numpy()[0]
-    img = np.transpose(img, (1, 2, 0))
-    img = np.clip(img, 0, 1)
-    img = np.uint8(img * 254)
-    # img = np.repeat(img, 4, axis=0)
-    # img = np.repeat(img, 4, axis=1)
-    pimg = Image.fromarray(img, mode="RGB")
-    """
-    img = TF.to_pil_image(img[0].cpu())
-    return img

@@ -1,5 +1,6 @@
 import random
 
+import numpy as np
 import torch
 import pydiffvg
 
@@ -15,30 +16,25 @@ class ClipDrawRenderer(RenderingInterface):
         self.num_lines = args.num_lines
         self.img_size = args.img_size
 
+        self.num_segments = 2
+        self.max_width = 5 * self.img_size / 100
+        self.min_width = 1 * self.img_size / 100
+
+        self.x = None
+
     def chunks(self, array):
         # array = torch.tensor(array, dtype=torch.float)
-        # return array.view(self.num_lines, self.genotype_size)
-        return array
+        # return array.view(self.num_lines, (self.num_segments * 3) + 1, 2)
+        return np.reshape(array, (self.num_lines, (self.num_segments * 3) + 1, 2))
 
     def generate_individual(self):
-        # Use GPU if available
-        pydiffvg.set_use_gpu(torch.cuda.is_available())
-        pydiffvg.set_device(self.device)
-
-        max_width = 5 * self.img_size / 100
-        min_width = 1 * self.img_size / 100
-
         # Initialize Random Curves
-        shapes = []
-        shape_groups = []
+        individual = []
         for i in range(self.num_lines):
-            # num_segments = random.randint(1, 3)
-            num_segments = 2
-            num_control_points = torch.zeros(num_segments, dtype=torch.int32) + 2
             points = []
             p0 = (random.random(), random.random())
             points.append(p0)
-            for j in range(num_segments):
+            for j in range(self.num_segments):
                 radius = 0.1
                 p1 = (p0[0] + radius * (random.random() - 0.5), p0[1] + radius * (random.random() - 0.5))
                 p2 = (p1[0] + radius * (random.random() - 0.5), p1[1] + radius * (random.random() - 0.5))
@@ -48,10 +44,50 @@ class ClipDrawRenderer(RenderingInterface):
                 points.append(p3)
                 p0 = p3
             points = torch.tensor(points)
+            # points[:, 0] *= self.img_size
+            # points[:, 1] *= self.img_size
+            individual.append(np.array(points))
+
+        individual = np.array(individual)
+        return individual.flatten()
+
+    def get_individual(self, _):
+        individual = []
+        for path in self.shapes:
+            points = torch.tensor(path.points)
+            points /= self.img_size
+            individual.append(points.cpu().detach().numpy())
+
+        individual = np.array(individual).flatten()
+        return individual
+
+    def to_adam(self, individual):
+        ind_copy = np.copy(individual)
+
+        ind_copy = self.chunks(ind_copy)
+        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+
+        # Initialize Random Curves
+        shapes = []
+        shape_groups = []
+        for i in range(self.num_lines):
+            # num_segments = random.randint(1, 3)
+            num_control_points = torch.zeros(self.num_segments, dtype=torch.int32) + 2
+            points = []
+            p0 = (ind_copy[i][0][0], ind_copy[i][0][1])
+            points.append(p0)
+            for j in range(self.num_segments):
+                p1 = (ind_copy[i][(j * 3) + 1][0], ind_copy[i][(j * 3) + 1][1])
+                p2 = (ind_copy[i][(j * 3) + 2][0], ind_copy[i][(j * 3) + 2][1])
+                p3 = (ind_copy[i][(j * 3) + 3][0], ind_copy[i][(j * 3) + 3][1])
+                points.append(p1)
+                points.append(p2)
+                points.append(p3)
+            points = torch.tensor(points)
             points[:, 0] *= self.img_size
             points[:, 1] *= self.img_size
             path = pydiffvg.Path(num_control_points=num_control_points, points=points,
-                                 stroke_width=torch.tensor((min_width + max_width) / 4), is_closed=False)
+                                 stroke_width=torch.tensor((self.min_width + self.max_width) / 4), is_closed=False)
             shapes.append(path)
             path_group = pydiffvg.ShapeGroup(shape_ids=torch.tensor([len(shapes) - 1]), fill_color=None,
                                              stroke_color=torch.tensor(
@@ -60,8 +96,11 @@ class ClipDrawRenderer(RenderingInterface):
 
         points_vars = []
         for path in shapes:
+            path.points.requires_grad = True
             points_vars.append(path.points)
-            print(len(path.points))
+
+        self.shapes = shapes
+        self.shape_groups = shape_groups
 
         return points_vars
 
