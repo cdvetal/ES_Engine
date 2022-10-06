@@ -97,10 +97,9 @@ class LineDrawRenderer(RenderingInterface):
             p0 = (ind_copy[i][0][0], ind_copy[i][0][1])
             points.append(p0)
             for j in range(num_segments):
-                radius = 1.0 / (num_segments + 2)
-                p1 = (p0[0] + radius * ind_copy[i][(j * 3) + 1][0], p0[1] + radius * ind_copy[i][(j * 3) + 1][1])
-                p2 = (p1[0] + radius * ind_copy[i][(j * 3) + 2][0], p1[1] + radius * ind_copy[i][(j * 3) + 2][1])
-                p3 = (p2[0] + radius * ind_copy[i][(j * 3) + 3][0], p2[1] + radius * ind_copy[i][(j * 3) + 3][1])
+                p1 = (ind_copy[i][(j * 3) + 1][0], ind_copy[i][(j * 3) + 1][1])
+                p2 = (ind_copy[i][(j * 3) + 2][0], ind_copy[i][(j * 3) + 2][1])
+                p3 = (ind_copy[i][(j * 3) + 3][0], ind_copy[i][(j * 3) + 3][1])
                 points.append(p1)
                 points.append(p2)
                 points.append(p3)
@@ -128,7 +127,7 @@ class LineDrawRenderer(RenderingInterface):
     def __str__(self):
         return "linedraw"
 
-    def render(self, a):
+    def render(self, input_ind):
         render = pydiffvg.RenderFunction.apply
         scene_args = pydiffvg.RenderFunction.serialize_scene(self.img_size, self.img_size, self.shapes, self.shape_groups)
         img = render(self.img_size, self.img_size, 2, 2, 0, None, *scene_args)

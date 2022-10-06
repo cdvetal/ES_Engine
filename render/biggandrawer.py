@@ -11,6 +11,8 @@ class BigGANRenderer(RenderingInterface):
 
         self.device = args.device
 
+        self.lr = 0.07
+
         output_size = args.img_size if args.img_size in [128, 256, 512] else 256
 
         self.model = BigGAN.from_pretrained(f'biggan-deep-{output_size}')
@@ -42,7 +44,9 @@ class BigGANRenderer(RenderingInterface):
     def to_adam(self, individual):
         ind_copy = np.copy(individual)
         ind_copy = self.chunks(ind_copy)
-        return [torch.nn.Parameter(torch.tensor(ind_copy).float().to(self.device))]
+        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+        ind_copy.requires_grad = True
+        return [ind_copy]
 
     def chunks(self, array):
         # if type(array) is list:
@@ -54,8 +58,8 @@ class BigGANRenderer(RenderingInterface):
         return "biggan"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, a):
-        out = self.model(a[0], 1)
+    def render(self, input_ind):
+        out = self.model(input_ind[0], 1)
 
         return out
 

@@ -1,4 +1,5 @@
 import os
+import json
 import random
 from datetime import datetime
 from time import time
@@ -25,7 +26,8 @@ render_table = {
     "organic": OrganicRenderer,
     "thinorg": ThinOrganicRenderer,
     "pixeldraw": PixelRenderer,
-    # "vqgan": VQGANRenderer,
+    "fastpixel": FastPixelRenderer,
+    "vqgan": VQGANRenderer,
     "clipdraw": ClipDrawRenderer,
     "vdiff": VDiffRenderer,
     "biggan": BigGANRenderer,
@@ -65,7 +67,26 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "A jack-o'-lantern"
+    args.clip_prompts = "a farm with chicken"
+    # args.input_image = "dogcat.png"
+
+    if args.from_checkpoint:
+        args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
+        # save_folder = f"experiments/{experiment_name}"
+        # CHECKPOINT = f"{save_folder}/{CHECKPOINT}"
+        # save_folder = "{}/{}".format(save_folder, experiment_name)
+        args.sub_folder = "from_checkpoint"
+        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
+        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
+    else:
+        args.experiment_name = f"{args.renderer_type}_L{args.num_lines}_{args.target_class}_CLIP{args.clip_influence}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
+        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
+        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
+
+    args_dict = vars(args)
+    with open(f"{args.save_folder}/{args.sub_folder}/config.json", 'w') as f:
+        json.dump(args_dict, f)
 
     class_mapping = open_class_mapping()
     if args.target_class is None or args.target_class == "none":
@@ -99,30 +120,30 @@ def setup_args():
     for key, value in args.active_models.items():
         print("- ", key)
 
-    args.clip = None
+    args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
+
+    if args.clip_model not in clip.available_models():
+        args.clip_model = "ViT-B/32"
+
+    print(f"Loading CLIP model: {args.clip_model}")
+
+    model, preprocess = clip.load(args.clip_model, device=args.device)
+    args.clip = model
+    args.preprocess = preprocess
+
+    print("CLIP module loaded.")
+
     if args.clip_influence > 0.0:
-        args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
-
-        if args.clip_model not in clip.available_models():
-            args.clip_model = "ViT-B/32"
-
-        print(f"Loading CLIP model: {args.clip_model}")
-
-        model, preprocess = clip.load(args.clip_model, device=args.device)
-
-        print(f"Using \"{args.clip_prompts}\" as prompt to CLIP.")
-
         # If no clip prompts are given use the target class, else use the provided prompts
         if args.clip_prompts is None:
             text_inputs = clip.tokenize([args.target_class]).to(args.device)
         else:
             text_inputs = clip.tokenize(args.clip_prompts).to(args.device)
 
-        with torch.no_grad():
-            args.text_features = model.encode_text(text_inputs)
+        print(f"Using \"{args.clip_prompts}\" as prompt to CLIP.")
 
-        args.clip = model
-        print("CLIP module loaded.")
+        with torch.no_grad():
+            args.text_features = args.clip.encode_text(text_inputs)
 
         if args.clip_influence == 1.0:
             print("CLIP influence as 1.0. Models removed.")
@@ -137,19 +158,9 @@ def setup_args():
             with torch.no_grad():
                 args.image_features = args.clip.encode_image(image)
 
-    if args.from_checkpoint:
-        args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
-        # save_folder = f"experiments/{experiment_name}"
-        # CHECKPOINT = f"{save_folder}/{CHECKPOINT}"
-        # save_folder = "{}/{}".format(save_folder, experiment_name)
-        args.sub_folder = "from_checkpoint"
-        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
-        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
-    else:
-        args.experiment_name = f"{args.renderer}_L{args.num_lines}_{args.target_class}_CLIP{args.clip_influence}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
-        args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
-        save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
-        args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
+    if args.pop_size <= 1:
+        print(f"Population size as {args.pop_size}, changing to Adam.")
+        args.evolution_type = "adam"
 
     return args
 
@@ -161,14 +172,20 @@ if __name__ == "__main__":
     args = setup_args()
     # Get time of start of the evolution
     start_time_evo = time()
+
     # Main program
-    main_adam(args)
-    # main_cma_es(args)
+    if args.evolution_type == "adam":
+        main_adam(args)
+    elif args.evolution_type == "cmaes":
+        main_cma_es(args)
+    else:
+        print("The used evolution mode is not defined. Please choose one of the following (\"cmaes\", \"adam\")")
+
     # Get end time
     end_time = time()
 
-    total_time = (end_time - start_time_total)
     evo_time = (end_time - start_time_evo)
+    total_time = (end_time - start_time_total)
 
     print("-" * 20)
     print("Evolution elapsed time: {:.3f}".format(evo_time))

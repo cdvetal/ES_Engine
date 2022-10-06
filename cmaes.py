@@ -2,7 +2,6 @@ import os
 import pickle
 import random
 
-import clip
 import numpy as np
 import torch
 import torchvision
@@ -101,29 +100,17 @@ def fitness_classifiers(args, img):
 
 
 def fitness_input_image(args, img):
-    if not args.clip:
-        args.clip_model = "ViT-B/32"
-        model, preprocess = clip.load(args.clip_model, device=args.device)
-        args.clip = model
-        args.preprocess = preprocess
-
     # Calculate clip similarity
     trans = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     img_t = trans(img).unsqueeze(0).to(args.device)
     image_features = args.clip.encode_image(img_t)
     image_clip_loss = torch.cosine_similarity(args.image_features, image_features, dim=1)
-    image_clip_loss *= -1
+    image_clip_loss *= 100
 
     return image_clip_loss
 
 
 def fitness_clip_prompts(args, img):
-    if not args.clip:
-        args.clip_model = "ViT-B/32"
-        model, preprocess = clip.load(args.clip_model, device=args.device)
-        args.clip = model
-        args.preprocess = preprocess
-
     # Calculate clip similarity
     p_s = []
     # t_img = TF.to_tensor(img).unsqueeze(0).to(args.device)
@@ -152,7 +139,7 @@ def fitness_clip_prompts(args, img):
 def calculate_fitness(args, img):
     losses = []
 
-    if args.clip_influence < 1.0:
+    if args.clip_influence < 1.0 and len(args.active_models) > 0:
         classifiers_loss = fitness_classifiers(args, img)
         classifiers_loss *= (1.0 - args.clip_influence)
         losses.append(classifiers_loss)
@@ -192,6 +179,19 @@ def evaluate(args, individual):
 
         img = renderer.render(ind)
         final_loss = calculate_fitness(args, img)
+
+        if args.renderer_type == "vdiff" and gen >= 1:
+            lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
+            individual = renderer.makenoise(gen, individual)
+            individual.requires_grad_()
+            individual = [individual]
+            optimizer = optim.Adam(individual, lr=min(lr * 0.001, 0.01))
+
+        if torch.min(img) < 0.0:
+            print("Needs reverse normalization")
+            img = (img + 1) / 2
+
+        save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_{gen}.png")
 
     print(final_loss)
 

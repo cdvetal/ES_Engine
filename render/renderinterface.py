@@ -1,20 +1,22 @@
 class RenderingInterface:
-    model = None
-
     def __init__(self, args):
-        self.args = args
-        self.genotype_size = 0
-        self.header_length = 1
+        pass
 
     def generate_individual(self):
         pass
 
-    def generate_x(self):
+    def get_individual(self, adam_ind):
         pass
 
-    def load_model(self, config, checkpoint):
+    def to_adam(self, individual):
         pass
 
-    def render(self, a):
+    def chunks(self, array):
+        pass
+
+    def __str__(self):
+        pass
+
+    def render(self, input_ind):
         pass
 

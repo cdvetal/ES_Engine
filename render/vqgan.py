@@ -80,6 +80,8 @@ class VQGANRenderer(RenderingInterface):
         config_path = f'{main_path}/vqgan_{vqgan_model}.yaml'
         checkpoint_path = f'{main_path}/vqgan_{vqgan_model}.ckpt'
 
+        self.img_size = args.img_size
+
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         print('Using device:', self.device)
 
@@ -96,34 +98,32 @@ class VQGANRenderer(RenderingInterface):
         del self.model.loss
         self.model = self.model.to(self.device)
 
-        e_dim = self.model.quantize.e_dim
-        n_toks = self.model.quantize.n_e
+        self.e_dim = self.model.quantize.e_dim
+        self.n_toks = self.model.quantize.n_e
         z_min = self.model.quantize.embedding.weight.min(dim=0).values[None, :, None, None]
         z_max = self.model.quantize.embedding.weight.max(dim=0).values[None, :, None, None]
         num_resolutions = self.model.decoder.num_resolutions
         f = 2 ** (num_resolutions - 1)
-        image_size = 224
-        toksX, toksY = image_size // f, image_size // f
+        # image_size = 224
 
-        one_hot = F.one_hot(torch.randint(n_toks, [toksY * toksX], device=self.device), n_toks).float()
-        z = one_hot @ self.model.quantize.embedding.weight
-
-        z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
-        self.z_shape = z.shape
-
-        self.genotype_size = torch.numel(z)
-        self.real_genotype_size = self.genotype_size
-
-        print(self.z_shape, self.genotype_size)
+        self.toksX, self.toksY = self.img_size // f, self.img_size // f
 
         self.replace_grad = ReplaceGrad.apply
         self.clamp_with_grad = ClampWithGrad.apply
 
-        self.to_pil = torchvision.transforms.ToPILImage()
+        self.lr = 0.1
+
+    def generate_individual(self):
+        one_hot = F.one_hot(torch.randint(self.n_toks, [self.toksY * self.toksX], device=self.device), self.n_toks).float()
+        z = one_hot @ self.model.quantize.embedding.weight
+
+        z = z.view([-1, self.toksY, self.toksX, self.e_dim]).permute(0, 3, 1, 2)
+        self.z_shape = z.shape
+
+        return z.cpu().detach().numpy().flatten()
 
     def chunks(self, array):
-        array = torch.tensor(array, dtype=torch.float)
-        return array.view(self.z_shape)
+        return np.reshape(array, self.z_shape)
 
     def vector_quantize(self, x, codebook):
         d = x.pow(2).sum(dim=-1, keepdim=True) + codebook.pow(2).sum(dim=1) - 2 * x @ codebook.T
@@ -134,9 +134,18 @@ class VQGANRenderer(RenderingInterface):
     def __str__(self):
         return "VQGAN"
 
-    def render(self, a):
-        z_q = self.vector_quantize(a.movedim(1, 3), self.model.quantize.embedding.weight).movedim(3, 1)
-        out = self.clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
+    def to_adam(self, individual):
+        ind_copy = np.copy(individual)
 
-        return self.to_pil(out.squeeze(0))
+        ind_copy = self.chunks(ind_copy)
+        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+
+        ind_copy.requires_grad = True
+        return [ind_copy]
+
+    def render(self, input_ind):
+        input_ind = input_ind[0]
+        z_q = self.vector_quantize(input_ind.movedim(1, 3), self.model.quantize.embedding.weight).movedim(3, 1)
+        out = self.clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
+        return out
 

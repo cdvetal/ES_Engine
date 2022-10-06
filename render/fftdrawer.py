@@ -53,7 +53,7 @@ class FFTRenderer(RenderingInterface):
     def __str__(self):
         return "fftdrawer"
 
-    def render(self, a):
+    def render(self, input_ind):
         image_f = to_valid_rgb(self.image_f, colors=1.5)
         img = image_f(contrast=0.9)
         return img

@@ -1,7 +1,8 @@
 import cairo
 import numpy as np
-import torch
 from PIL import Image
+import torch
+import torchvision.transforms.functional as TF
 
 from render.renderinterface import RenderingInterface
 from utils import map_number
@@ -12,21 +13,40 @@ class PylinhasRenderer(RenderingInterface):
         super(PylinhasRenderer, self).__init__(args)
 
         self.img_size = args.img_size
+        self.num_lines = args.num_lines
+
+        self.device = args.device
+
+        self.header_length = 1
 
         self.genotype_size = 8
-        self.real_genotype_size = self.genotype_size * args.num_lines
 
     def chunks(self, array):
-        array = torch.tensor(array, dtype=torch.float)
-        return array.view(self.args.num_lines, self.genotype_size)
+        return np.reshape(array, (self.num_lines, self.genotype_size))
+
+    def generate_individual(self):
+        return np.random.rand(self.num_lines, self.genotype_size).flatten()
+
+    def to_adam(self, individual):
+        ind_copy = np.copy(individual)
+        ind_copy = self.chunks(ind_copy)
+        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+        ind_copy.requires_grad = True
+        return [ind_copy]
+
+    def get_individual(self, adam_ind):
+        return adam_ind[0].cpu().detach().numpy().flatten()
 
     def __str__(self):
         return "pylinhas"
 
-    def render(self, a):
+    def render(self, input_ind):
+        input_ind = input_ind[0]
+        input_ind = input_ind.cpu().detach().numpy()
+
         # split input array into header and rest
-        head = a[:self.header_length]
-        rest = a[self.header_length:]
+        head = input_ind[:self.header_length]
+        rest = input_ind[self.header_length:]
 
         # determine background color from header
         R = head[0][0]
@@ -69,9 +89,9 @@ class PylinhasRenderer(RenderingInterface):
             # cr.set_line_width(1)
 
             for it in range(4, len(e) - 1, 2):
-                x = map_number(e[it], 0, 1, 0, self.img_size)
+                input_ind = map_number(e[it], 0, 1, 0, self.img_size)
                 y = map_number(e[it + 1], 0, 1, 0, self.img_size)
-                cr.line_to(x, y)
+                cr.line_to(input_ind, y)
 
             cr.close_path()
             cr.stroke_preserve()
@@ -91,4 +111,4 @@ class PylinhasRenderer(RenderingInterface):
         # draw line with round line caps (circles at the end)
         # draw.polygon(
         #   ((x1,y1), (x2,y2), (x3,y3)), (R,G,B), outline=None)
-        return pilImage
+        return TF.to_tensor(pilImage).unsqueeze(0)

@@ -13,6 +13,8 @@ class ClipDrawRenderer(RenderingInterface):
 
         self.device = args.device
 
+        self.lr = 1.0
+
         self.num_lines = args.num_lines
         self.img_size = args.img_size
 
@@ -107,7 +109,7 @@ class ClipDrawRenderer(RenderingInterface):
     def __str__(self):
         return "clipdraw"
 
-    def render(self, a):
+    def render(self, input_ind):
         render = pydiffvg.RenderFunction.apply
 
         scene_args = pydiffvg.RenderFunction.serialize_scene(

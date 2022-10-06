@@ -77,6 +77,8 @@ class VDiffRenderer(RenderingInterface):
         self.pred = None
         self.v = None
 
+        self.cur_gen = 0
+
     def chunks(self, array):
         return np.reshape(array, (1, 3, self.gen_height, self.gen_width))
 
@@ -90,7 +92,7 @@ class VDiffRenderer(RenderingInterface):
         self.t = torch.linspace(top_val, 0, self.iterations + 2, device=self.device)[:-1]
         # print("self.t is ", self.t)
 
-        self.x = torch.randn([1, 3, self.gen_height, self.gen_width], device=self.device)
+        x = torch.randn([1, 3, self.gen_height, self.gen_width], device=self.device)
 
         if self.schedule == 'log':
             self.steps = utils.get_log_schedule(self.t)
@@ -98,17 +100,27 @@ class VDiffRenderer(RenderingInterface):
             self.steps = utils.get_spliced_ddpm_cosine_schedule(self.t)
 
         # [model, steps, eta, extra_args, ts, alphas, sigmas]
-        self.sample_state = sampling.sample_setup(self.model, self.x, self.steps, self.eta, {})
+        self.sample_state = sampling.sample_setup(self.model, x, self.steps, self.eta, {})
 
+        individual = x.cpu().detach().numpy()
+
+        print(individual.shape)
+
+        return individual
 
     def to_adam(self, individual):
+        ind_copy = np.copy(individual)
 
-        return [self.x]
+        ind_copy = self.chunks(ind_copy)
+        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+        ind_copy.requires_grad = True
 
-    def render(self, x):
+        return [ind_copy]
 
-        # pred, v, next_x = sampling.sample_step(self.sample_state, x, self.cur_iteration, self.pred, self.v)
-        pred, v, next_x = sampling.sample_step(self.sample_state, self.x, x, self.pred, self.v)
+    def render(self, input_ind):
+        input_ind = input_ind[0]
+
+        pred, v, next_x = sampling.sample_step(self.sample_state, input_ind, self.cur_gen, self.pred, self.v)
         self.pred = pred.detach()
         self.v = v.detach()
         pixels = clamp_with_grad(pred.add(1).div(2), 0, 1)
@@ -123,5 +135,7 @@ class VDiffRenderer(RenderingInterface):
 
         return pixels
 
-    def makenoise(self, cur_it):
-        return sampling.sample_noise(self.sample_state, self.x, cur_it, self.pred, self.v).detach()
+    def makenoise(self, cur_it, x):
+        x = x[0]
+        self.cur_gen = cur_it
+        return sampling.sample_noise(self.sample_state, x, cur_it, self.pred, self.v).detach()

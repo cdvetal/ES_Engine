@@ -74,7 +74,9 @@ class PixelRenderer(RenderingInterface):
         self.num_lines = args.num_lines
         self.img_size = args.img_size
 
-        self.pixel_type = "tri"
+        self.lr = 0.03
+
+        self.pixel_type = "rect"
 
         self.cell_size = self.img_size / self.num_lines
 
@@ -150,7 +152,7 @@ class PixelRenderer(RenderingInterface):
 
         return color_vars
 
-    def render(self, a):
+    def render(self, input_ind):
         render = pydiffvg.RenderFunction.apply
         scene_args = pydiffvg.RenderFunction.serialize_scene(self.img_size, self.img_size, self.shapes,
                                                              self.shape_groups)

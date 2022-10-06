@@ -4,6 +4,8 @@ import cairo
 import numpy as np
 import torch
 from PIL import Image
+import torchvision.transforms.functional as TF
+
 
 from render.renderinterface import RenderingInterface
 from utils import map_number, Vector, perpendicular, normalize
@@ -14,22 +16,41 @@ class ThinOrganicRenderer(RenderingInterface):
         super(ThinOrganicRenderer, self).__init__(args)
 
         self.img_size = args.img_size
+        self.num_lines = args.num_lines
+
+        self.device = args.device
+
+        self.header_length = 1
 
         self.genotype_size = 13
-        self.real_genotype_size = self.genotype_size * args.num_lines
 
     def chunks(self, array):
-        array = torch.tensor(array, dtype=torch.float)
-        return array.view(self.args.num_lines, self.genotype_size)
+        return np.reshape(array, (self.num_lines, self.genotype_size))
+
+    def generate_individual(self):
+        return np.random.rand(self.num_lines, self.genotype_size).flatten()
+
+    def to_adam(self, individual):
+        ind_copy = np.copy(individual)
+        ind_copy = self.chunks(ind_copy)
+        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+        ind_copy.requires_grad = True
+        return [ind_copy]
+
+    def get_individual(self, adam_ind):
+        return adam_ind[0].cpu().detach().numpy().flatten()
 
     def __str__(self):
         return "thinorg"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, a):
+    def render(self, input_ind):
+        input_ind = input_ind[0]
+        input_ind = input_ind.cpu().detach().numpy()
+
         # split input array into header and rest
-        head = a[:self.header_length]
-        rest = a[self.header_length:]
+        head = input_ind[:self.header_length]
+        rest = input_ind[self.header_length:]
 
         # determine background color from header
         R = head[0][0]
@@ -64,28 +85,28 @@ class ThinOrganicRenderer(RenderingInterface):
             w1 = map_number(e[3], 0, 1, min_size, max_size)
             w2 = map_number(e[4], 0, 1, min_size, max_size)
 
-            a = Vector(map_number(e[5], 0, 1, 0, self.img_size), map_number(e[6], 0, 1, 0, self.img_size))
+            x = Vector(map_number(e[5], 0, 1, 0, self.img_size), map_number(e[6], 0, 1, 0, self.img_size))
             # a=Vector(500, 200)
             d = Vector(map_number(e[7], 0, 1, 0, self.img_size), map_number(e[8], 0, 1, 0, self.img_size))
             # d=Vector(200, 800)
-            A = Vector(a.x, a.y)
+            A = Vector(x.x, x.y)
             D = Vector(d.x, d.y)
 
             AD = D - A
             maxdist = AD.length() / 2
 
-            b = a + Vector(map_number(e[9], 0, 1, 0, maxdist) * np.sign(d.x - a.x),
-                           map_number(e[10], 0, 1, 0, maxdist) * np.sign(d.y - a.y))
+            b = x + Vector(map_number(e[9], 0, 1, 0, maxdist) * np.sign(d.x - x.x),
+                                   map_number(e[10], 0, 1, 0, maxdist) * np.sign(d.y - x.y))
 
             # b=a+Vector(-100, +150) #os sinais têm que ser compativeis com as direções
             # c=d+Vector(-100, -100) #os sinais têm que ser compativeis com as direções
-            c = d + Vector(map_number(e[11], 0, 1, 0, maxdist) * np.sign(a.x - d.x),
-                           map_number(e[12], 0, 1, 0, maxdist) * np.sign(a.y - d.y))
+            c = d + Vector(map_number(e[11], 0, 1, 0, maxdist) * np.sign(x.x - d.x),
+                           map_number(e[12], 0, 1, 0, maxdist) * np.sign(x.y - d.y))
 
             cr.set_source_rgb(R, G, B)
             cr.set_line_width(1)
 
-            cr.move_to(a.x, a.y)
+            cr.move_to(x.x, x.y)
             cr.curve_to(b.x, b.y, c.x, c.y, d.x, d.y)
             cr.stroke()
 
@@ -115,7 +136,7 @@ class ThinOrganicRenderer(RenderingInterface):
             cr.fill_preserve()
             cr.stroke()
 
-            cr.arc(a.x, a.y, w1, AB_perp_normed.angle(), math.pi + AB_perp_normed.angle())
+            cr.arc(x.x, x.y, w1, AB_perp_normed.angle(), math.pi + AB_perp_normed.angle())
             cr.fill_preserve()
             cr.stroke()
 
@@ -133,4 +154,4 @@ class ThinOrganicRenderer(RenderingInterface):
                                     pilMode, 0, 1)
         pilImage = pilImage.convert('RGB')
 
-        return pilImage
+        return TF.to_tensor(pilImage).unsqueeze(0)

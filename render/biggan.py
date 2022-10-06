@@ -538,6 +538,7 @@ class Generator(nn.Module):
         z = self.tanh(z)
         return z
 
+
 class BigGAN(nn.Module):
     """BigGAN Generator."""
 
