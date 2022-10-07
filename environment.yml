@@ -88,7 +88,6 @@ dependencies:
     - aiohttp==3.8.3
     - aiosignal==1.2.0
     - antlr4-python3-runtime==4.9.3
-    - aphantasia==2.5.0
     - async-timeout==4.0.2
     - attrs==22.1.0
     - blessed==1.19.1
@@ -96,7 +95,6 @@ dependencies:
     - botocore==1.27.81
     - cachetools==5.2.0
     - charset-normalizer==2.1.1
-    - clip==1.0
     - coloredlogs==15.0.1
     - contourpy==1.0.5
     - cssutils==2.6.0

@@ -42,9 +42,12 @@ It requires a python version higher than 3.7 and a cudatoolbox version higher th
 - If pycairo installs but fails to execute (undefined symbol: cairo_svg_surface_set_document_unit) use:
   - ```pip install pycairo==1.11.0```
 
+- External packages that must be installed:
+  - ```pip install git+https://github.com/eps696/aphantasia.git```
+  - ```pip install git+https://github.com/openai/CLIP.git```
 
-- If pydiffvg is not install follow:
-  - ```git clone```
+- How to install pydiffvg:
+  - ```git clone https://github.com/lmagoncalo/diffvg```
   - ```cd diffvg```
   - ```git submodule update --init --recursive```
   - Verify that all these packages are installed:
@@ -58,10 +61,6 @@ It requires a python version higher than 3.7 and a cudatoolbox version higher th
     - ```pip install torch-tools```
     - ```pip install visdom```
   - Then do ```python setup.py install```
-
-- Note. External packages that might not get correctly installed, use:
-  - ```pip install git+https://github.com/eps696/aphantasia.git```
-  - ```pip install git+https://github.com/openai/CLIP.git```
 
 
 ## Usage
