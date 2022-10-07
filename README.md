@@ -1,50 +1,77 @@
 # ES Engine
 
-This tool allows the use of a CMA-ES (Covariance Matrix Adaptation Evolution Strategy) algorithm to evolve renderings to approximate a certain class of the imagenet dataset. It relies on the use of pre-trained classifiers to guide the evolutionary process by calculating the reward value based on the certainty of these classifiers on the desired class. 
-It is also possible to use the CLIP to guide the evolutionary process by calculating the cosine similarity between the encodings of the desired prompts and the encodings of the generated renderings. It can be use a combination of both methods by controlling the influence of the CLIP. 
+This tool allows the use of a CMA-ES (Covariance Matrix Adaptation Evolution Strategy) algorithm and Adam to evolve renderings to approximate a certain class of the imagenet dataset. It relies on the use of pre-trained classifiers to guide the optimization process by calculating the reward value based on the certainty of these classifiers on the desired class. 
+It is also possible to use the CLIP to guide the optimization process by calculating the cosine similarity between the encodings of the desired prompts and the encodings of the generated renderings. 
 
 
 ## Rendering system
-Each image is generated using a "renderer" algorithm. Each "renderer" is located in the render subdirectory and can be visualized using the test_renderer.py script which outputs a sample image using each of the available algorithms. Each renderer is just a module that contains a function called render which is called at each generation.
-
-```
-# ind: array of real vectors, img_size: size of the desired output image
-def render(ind, img_size):
-    ...
-    return img
-```
-
-This function receives a numpy array which contains a list of vectors to be used by the renderer algorithm to generate an image. The function also receives the target size which indicates the size of the image to output. This image must be a PIL Image so all algorithms are similar and the communication between modules is simplified. Depending on the renderer, the size of the input vector may change. For example, in the “pylinhas”, each vector is a list of length 8 which is used to create a line. If we increase the number of vectors we increase the number of lines. However, other renderers may require a larger vector for each line. This information is stored in the genotype_size variable which defines the size of each vector. 
+Each image is generated using a "renderer" algorithm located in the render subdirectory. Each renderer is just a module that contains a set of functions that can be used to generate the images.
+- **generate_individual** - Function used for the initialization process. It returns a flat numpy array containing the necessary values to render an image.
+- **to_adam** - This function receives a numpy array containing an individual, created either by random initialization or by CMA-ES and converts it to a tensor with gradients to be used by an Adam optimizer.
+- **get_individual** - This functions does the opposite of the **to_adam**. It receives the information passed to Adam, places it on CPU, detaches it and converts it to numpy array.
+- **chunks** - Auxiliary function to perform all the reshapes necessary to make the flat numpy array with the required shape for the generation.
+- **render** - Receives a tensor array and returns a tensor image.
 
 ### Current renderers
 - **pylinhas** - Draws using a set of colored lines
 - **chars** - Draws using characters
 - **organic** - Draws using organic shapes
 - **thinorg** - Similar to organic but with thinner lines
+- **biggan** - It uses a pretrained BigGAN with some modifications.
+- **vqgan** - Uses a pretrained VQGAN to render the images.
+- **clipdraw** - Draws using a set of differentiable colored lines.
+- **linedraw** - Draws using a set of differentiable thin black lines.
+- **fftdraw** - Creates an images using Fourier Transforms.
+- **fastpixel** - Creates a small images which is then scaled to the desired size.
+- **pixeldraw** - Draws using a set of differentiable colored squares.
+- **vdiff** - Creates images using a pretrained diffusion model.
 
 
 ## Scoring system
 The scoring system is based on the use of pre-trained classifiers. Each classifier is located in the classifiers subdirectory and can be tested using the test_classifier.py script. Each classifier contains three important features, a preprocessing function, a scoring function and a target size. The first one is a function that applies the required preprocess to the input image. The second one is a function that receives the preprocessed image and returns a list of floats. Lastly, the target_size is a set of two values that specify the size of their input. The output of the predict function is a list of values which represent the confidence of the classifier on the input image being each of the Image Net classes. These values are then used as fitness to guide the evolution process and are ranged from 0.0 to 1.0. Multiple classifiers can be used where the reward value is calculated based on the sum of the scores for each classifier.
 
 ## Setup
-- Create virtual environment: ```python3 -m venv env```
-- Activate virtual environment: ```source env/bin/activate```
-- Install dependencies: ```pip install -r requirements.txt```
+It requires a python version higher than 3.7 and a cudatoolbox version higher than 9.0.
 - It might be necessary additional steps before installing the requirements:
   - Install pycairo dependencies: ```sudo apt install libcairo2-dev pkg-config python3-dev```
   - Install wheel package: ```pip install wheel```
   - Install gcc: ```sudo apt-get install gcc```
+
+- If pycairo fails to install (ERROR: Failed building wheel for pycairo) use:
+  - ```sudo apt install libcairo2-dev pkg-config python3-dev```
+- If pycairo installs but fails to execute (undefined symbol: cairo_svg_surface_set_document_unit) use:
+  - ```pip install pycairo==1.11.0```
+
+
+- If pydiffvg is not install follow:
+  - ```git clone```
+  - ```cd diffvg```
+  - ```git submodule update --init --recursive```
+  - Verify that all these packages are installed:
+    - ```conda install -y scikit-image```
+    - ```conda install -y -c anaconda cmake```
+    - ```conda install -y -c conda-forge ffmpeg```
+    - ```pip install svgwrite```
+    - ```pip install svgpathtools```
+    - ```pip install cssutils```
+    - ```pip install numba```
+    - ```pip install torch-tools```
+    - ```pip install visdom```
+  - Then do ```python setup.py install```
+
+- Note. External packages that might not get correctly installed, use:
+  - ```pip install git+https://github.com/eps696/aphantasia.git```
+  - ```pip install git+https://github.com/openai/CLIP.git```
+
 
 ## Usage
 This tool is able to work without any arguments as they have a predefined configuration file where all the required information is stored. However, using the command line arguments it is possible to change these values.
 
 Examples:
 
-```python es_engine.py```
+```python main.py --clip-prompts "darth vader"```
 
-```python es_engine.py --img-size 1024 --target-class goldfish```
-
-```python es_engine.py --random-seed 1 --n-gens 200 --renderer organic --img-size 112 --networks inceptionv3,vgg16,xception,mobilenet,efficientnetb4,efficientnetb0 --target-class hummingbird```
+```python main.py --img-size 512 --clip-prompts "a painting of superman by van gogh" --renderer pixeldraw --lr 0.03```
 
 - [Command Line Arguments](#command-line-arguments)
   - [--random-seed](#--random-seed)
@@ -165,10 +192,6 @@ CLIP prompts for the generation. Default is the target class. Example:
 
 ## TODO
 
-- [x] Pylinhas, chars, organic and thinorg renderers working
-- [x] Add support for multiple classifiers
-- [ ] Add support for VQGAN
-- [ ] Add support to GPU and CPU
-- [ ] Use image as input
-- [ ] Add more renderers
+- [ ] Correct BigGAN problem related to loss of quality in last generation.
+
 

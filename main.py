@@ -62,16 +62,14 @@ def setup_args():
     parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
     parser.add_argument('--clip-prompts', default=None, help='CLIP prompts to use for the generation. Default is the target class')
     parser.add_argument('--input-image', default=None, help='Image to use as input.')
-    parser.add_argument('--adam-steps', default=ADAM_STEPS, help='Number of steps from Adam. Default is {}.'.format(ADAM_STEPS))
-    parser.add_argument('--lr', default=LR, help='Learning rate for the Adam optimizer. Default is {}.'.format(LR))
-    parser.add_argument('--lamarck', default=LAMARCK, help='Lamarck. Default is {}.'.format(LAMARCK))
+    parser.add_argument('--adam-steps', default=ADAM_STEPS, type=int, help='Number of steps from Adam. Default is {}.'.format(ADAM_STEPS))
+    parser.add_argument('--lr', default=LR, type=float, help='Learning rate for the Adam optimizer. Default is {}.'.format(LR))
+    parser.add_argument('--lamarck', default=LAMARCK, action='store_true', help='Lamarck. Default is {}.'.format(LAMARCK))
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a beautiful landscape"
+    # args.clip_prompts = "a beautiful landscape"
     # args.input_image = "input_image.jpg"
-
-    args.random_seed = 2
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
@@ -157,7 +155,7 @@ def setup_args():
     # args.fitnesses.append(GaussianLoss())
     # args.fitnesses.append(ResmemLoss())
     # args.fitnesses.append(SaturationLoss())
-    args.fitnesses.append(SmoothnessLoss())
+    # args.fitnesses.append(SmoothnessLoss())
     # args.fitnesses.append(SymmetryLoss())
     # args.fitnesses.append(StyleLoss(style_file="style.jpg"))
     # args.fitnesses.append(EdgeLoss())
