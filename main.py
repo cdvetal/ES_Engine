@@ -19,6 +19,7 @@ import torch
 import argparse
 from config import *
 from render import *
+from fitnesses import *
 
 render_table = {
     "chars": CharsRenderer,
@@ -39,7 +40,7 @@ render_table = {
 def setup_args():
     parser = argparse.ArgumentParser(description="Evolve to objective")
 
-    parser.add_argument('--evolution-type', default=EVOLUTION_TYPE, help='Specify the type of evolution. (cmaes, adam or hybrid). Default is {}.'.format(EVOLUTION_TYPE))
+    parser.add_argument('--evolution-type', default=EVOLUTION_TYPE, help='Specify the type of evolution. (cmaes or adam). Default is {}.'.format(EVOLUTION_TYPE))
     parser.add_argument('--random-seed', default=RANDOM_SEED, type=int, help='Use a specific random seed (for repeatability). Default is {}.'.format(RANDOM_SEED))
     parser.add_argument('--save-folder', default=SAVE_FOLDER, help="Directory to experiment outputs. Default is {}.".format(SAVE_FOLDER))
     parser.add_argument('--n-gens', default=N_GENS, type=int, help='Maximum generations. Default is {}.'.format(N_GENS))
@@ -59,7 +60,7 @@ def setup_args():
     parser.add_argument('--sigma', default=SIGMA, type=float, help='The initial standard deviation of the distribution. Default is {}.'.format(SIGMA))
     parser.add_argument('--clip-influence', default=CLIP_INFLUENCE, type=float, help='The influence CLIP has in the generation (0.0 - 1.0). Default is {}.'.format(CLIP_INFLUENCE))
     parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
-    parser.add_argument('--clip-prompts', default=TARGET_CLASS, help='CLIP prompts to use for the generation. Default is the target class')
+    parser.add_argument('--clip-prompts', default=None, help='CLIP prompts to use for the generation. Default is the target class')
     parser.add_argument('--input-image', default=None, help='Image to use as input.')
     parser.add_argument('--adam-steps', default=ADAM_STEPS, help='Number of steps from Adam. Default is {}.'.format(ADAM_STEPS))
     parser.add_argument('--lr', default=LR, help='Learning rate for the Adam optimizer. Default is {}.'.format(LR))
@@ -67,8 +68,10 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a farm with chicken"
-    # args.input_image = "dogcat.png"
+    args.clip_prompts = "a beautiful landscape"
+    # args.input_image = "input_image.jpg"
+
+    args.random_seed = 2
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
@@ -113,12 +116,14 @@ def setup_args():
 
     args.renderer = render_table[args.renderer_type](args)
 
+    """
     args.active_models = get_active_models_from_arg(args.networks)
     args.active_models_quantity = len(args.active_models.keys())
 
     print("Loaded models:")
     for key, value in args.active_models.items():
         print("- ", key)
+    """
 
     args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
 
@@ -133,30 +138,29 @@ def setup_args():
 
     print("CLIP module loaded.")
 
-    if args.clip_influence > 0.0:
-        # If no clip prompts are given use the target class, else use the provided prompts
-        if args.clip_prompts is None:
-            text_inputs = clip.tokenize([args.target_class]).to(args.device)
-        else:
-            text_inputs = clip.tokenize(args.clip_prompts).to(args.device)
+    """
+    if args.clip_influence == 1.0:
+        print("CLIP influence as 1.0. Models removed.")
+        args.active_models = {}
+    """
 
-        print(f"Using \"{args.clip_prompts}\" as prompt to CLIP.")
-
-        with torch.no_grad():
-            args.text_features = args.clip.encode_text(text_inputs)
-
-        if args.clip_influence == 1.0:
-            print("CLIP influence as 1.0. Models removed.")
-            args.active_models = {}
+    args.fitnesses = []
+    if args.clip_prompts:
+        args.fitnesses.append(ClipPrompt(args.clip_prompts, model=args.clip, preprocess=args.preprocess))
 
     if args.input_image:
-        if not os.path.exists(args.input_image):
-            print("Image file does not exist. Ignoring..")
-            args.input_image = None
-        else:
-            image = args.preprocess(Image.open(args.input_image)).unsqueeze(0).to(args.device)
-            with torch.no_grad():
-                args.image_features = args.clip.encode_image(image)
+        # args.fitnesses.append(InputImage(args.input_image, model=args.clip, preprocess=args.preprocess))
+        pass
+
+    # args.fitnesses.append(PaletteLoss(palette=[[204/255.0, 0/255.0, 204/255.0]]))
+    # args.fitnesses.append(AestheticLoss(model=args.clip, preprocess=args.preprocess))
+    # args.fitnesses.append(GaussianLoss())
+    # args.fitnesses.append(ResmemLoss())
+    # args.fitnesses.append(SaturationLoss())
+    args.fitnesses.append(SmoothnessLoss())
+    # args.fitnesses.append(SymmetryLoss())
+    # args.fitnesses.append(StyleLoss(style_file="style.jpg"))
+    # args.fitnesses.append(EdgeLoss())
 
     if args.pop_size <= 1:
         print(f"Population size as {args.pop_size}, changing to Adam.")

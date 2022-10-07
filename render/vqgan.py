@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import torch
@@ -82,13 +83,15 @@ class VQGANRenderer(RenderingInterface):
 
         self.img_size = args.img_size
 
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        print('Using device:', self.device)
+        self.device = args.device
 
         create_save_folder(main_path, '')
 
-        wget_file(vqgan_config_table[vqgan_model], config_path)
-        wget_file(vqgan_checkpoint_table[vqgan_model], checkpoint_path)
+        # Verificar se esta a checkar
+        if not os.path.exists(config_path):
+            wget_file(vqgan_config_table[vqgan_model], config_path)
+        if not os.path.exists(checkpoint_path):
+            wget_file(vqgan_checkpoint_table[vqgan_model], checkpoint_path)
 
         self.config = OmegaConf.load(config_path)
 
