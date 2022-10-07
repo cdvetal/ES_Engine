@@ -1,4 +1,4 @@
-name: /home/cdv/anaconda3/envs/es_engine
+name: es_engine
 channels:
   - nvidia
   - defaults
