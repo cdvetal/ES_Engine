@@ -100,7 +100,6 @@ dependencies:
     - cssutils==2.6.0
     - cycler==0.11.0
     - deap==1.3.3
-    - diffvg==0.0.1
     - fonttools==4.37.3
     - frozenlist==1.3.1
     - fsspec==2022.8.2
