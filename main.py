@@ -6,7 +6,6 @@ from time import time
 
 import clip
 import pydiffvg
-from PIL import Image
 
 from adam import main_adam
 from cmaes import main_cma_es

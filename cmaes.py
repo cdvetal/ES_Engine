@@ -15,20 +15,6 @@ from utils import save_gen_best
 cur_iteration = 0
 
 
-def calculate_fitness(fitnesses, img):
-    losses = []
-
-    for fitness in fitnesses:
-        losses.append(fitness.evaluate(img))
-
-    losses = torch.stack(losses)
-    final_loss = torch.sum(losses)
-
-    # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
-    # return [(rewards[0],), fitness_partials]
-    return final_loss
-
-
 def evaluate(args, individual):
     renderer = args.renderer
 
@@ -55,7 +41,6 @@ def evaluate(args, individual):
             optimizer = optim.Adam(individual, lr=min(lr * 0.001, 0.01))
 
         if torch.min(img) < 0.0:
-            print("Needs reverse normalization")
             img = (img + 1) / 2
 
         save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_{gen}.png")

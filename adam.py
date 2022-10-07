@@ -9,20 +9,6 @@ import torch
 cur_iteration = 0
 
 
-def calculate_fitness(fitnesses, img):
-    losses = []
-
-    for fitness in fitnesses:
-        losses.append(fitness.evaluate(img))
-
-    losses = torch.stack(losses)
-    final_loss = torch.sum(losses)
-
-    # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
-    # return [(rewards[0],), fitness_partials]
-    return [final_loss]
-
-
 def main_adam(args):
     global cur_iteration
 
@@ -41,10 +27,10 @@ def main_adam(args):
         loss = calculate_fitness(args.fitnesses, img)
 
         optimizer.zero_grad()
-        (-loss[0]).backward()
+        (-loss).backward()
         optimizer.step()
 
-        print(loss[0])
+        print(loss)
 
         if args.renderer_type == "vdiff" and gen >= 1:
             lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
