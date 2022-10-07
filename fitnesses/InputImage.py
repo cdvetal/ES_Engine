@@ -5,7 +5,7 @@ import torch
 import torchvision
 from PIL import Image
 
-from fitnesses.fitness_interface import FitnessInterface
+from .fitness_interface import FitnessInterface
 
 
 class InputImage(FitnessInterface):

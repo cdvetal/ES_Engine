@@ -2,7 +2,7 @@ import clip
 import torch
 import torchvision
 
-from fitnesses.fitness_interface import FitnessInterface
+from .fitness_interface import FitnessInterface
 
 
 class ClipPrompt(FitnessInterface):

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from fitnesses.fitness_interface import FitnessInterface
+from .fitness_interface import FitnessInterface
 from utils import map_number
 
 

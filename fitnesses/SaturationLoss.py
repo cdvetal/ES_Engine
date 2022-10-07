@@ -1,6 +1,6 @@
 import torch
 
-from fitnesses.fitness_interface import FitnessInterface
+from .fitness_interface import FitnessInterface
 
 
 class SaturationLoss(FitnessInterface):

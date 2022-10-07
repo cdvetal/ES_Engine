@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from fitnesses.fitness_interface import FitnessInterface
+from .fitness_interface import FitnessInterface
 
 
 class GaussianSmoothing(nn.Module):

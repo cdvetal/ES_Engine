@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import torchvision.transforms.functional as TF
 
-from fitnesses.fitness_interface import FitnessInterface
+from .fitness_interface import FitnessInterface
 
 
 class Vgg16_Extractor(nn.Module):
