@@ -3,6 +3,9 @@ import os
 from torch import optim
 from torchvision.utils import save_image
 
+from fitnesses import calculate_fitness
+
+
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import torch
 

@@ -1,3 +1,5 @@
+from .fitness_interface import FitnessInterface
+from .fitness_interface import calculate_fitness
 from .AestheticLoss import AestheticLoss
 from .ClipPrompt import ClipPrompt
 from .InputImage import InputImage

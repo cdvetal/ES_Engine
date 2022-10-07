@@ -144,7 +144,6 @@ dependencies:
     - pyparsing==3.0.9
     - python-dateutil==2.8.2
     - pytorch-lightning==1.7.7
-    - pytorch-wavelets==1.3.0
     - pytz==2022.2.1
     - pywavelets==1.4.1
     - pyyaml==6.0

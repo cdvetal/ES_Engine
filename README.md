@@ -46,6 +46,11 @@ It requires a python version higher than 3.7 and a cudatoolbox version higher th
   - ```pip install git+https://github.com/eps696/aphantasia.git```
   - ```pip install git+https://github.com/openai/CLIP.git```
 
+- How to install pytorch_wavelets:
+- ```git clone https://github.com/fbcotter/pytorch_wavelets```
+- ```cd pytorch_wavelets```
+- ```pip install .```
+
 - How to install pydiffvg:
   - ```git clone https://github.com/lmagoncalo/diffvg```
   - ```cd diffvg```
