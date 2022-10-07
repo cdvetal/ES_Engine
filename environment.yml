@@ -1,4 +1,4 @@
-name: es_engine
+name: es_engine_2
 channels:
   - nvidia
   - defaults
@@ -182,4 +182,4 @@ dependencies:
     - werkzeug==2.2.2
     - yarl==1.8.1
     - zipp==3.8.1
-prefix: /home/cdv/anaconda3/envs/es_engine
+prefix: /home/cdv/anaconda3/envs/es_engine_2
