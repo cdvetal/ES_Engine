@@ -5,8 +5,7 @@ import torch
 from resmem import ResMem
 from torchvision import transforms
 
-from .fitness_interface import FitnessInterface
-from utils import wget_file, map_number
+from .fitness_interface import FitnessInterface, wget_file, map_number
 
 resmem_url = 'https://github.com/pixray/resmem/releases/download/1.1.3_model/model.pt'
 

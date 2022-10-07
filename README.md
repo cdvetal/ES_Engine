@@ -47,9 +47,9 @@ It requires a python version higher than 3.7 and a cudatoolbox version higher th
   - ```pip install git+https://github.com/openai/CLIP.git```
 
 - How to install pytorch_wavelets:
-- ```git clone https://github.com/fbcotter/pytorch_wavelets```
-- ```cd pytorch_wavelets```
-- ```pip install .```
+  - ```git clone https://github.com/fbcotter/pytorch_wavelets```
+  - ```cd pytorch_wavelets```
+  - ```pip install .```
 
 - How to install pydiffvg:
   - ```git clone https://github.com/lmagoncalo/diffvg```
@@ -69,7 +69,7 @@ It requires a python version higher than 3.7 and a cudatoolbox version higher th
 
 
 ## Usage
-This tool is able to work without any arguments as they have a predefined configuration file where all the required information is stored. However, using the command line arguments it is possible to change these values.
+This tool is able to work without any arguments except for the target, either clip prompts or input image. A configuration file contains all the required information. However, using the command line arguments it is possible to change these values.
 
 Examples:
 
