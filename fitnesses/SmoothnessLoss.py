@@ -77,7 +77,7 @@ class SmoothnessLoss(FitnessInterface):
     def __init__(self):
         super(SmoothnessLoss, self).__init__()
 
-        self.smoothness_weight = -1
+        self.smoothness_weight = -0.5
         self.smoothness_type = 'log'
         self.smoothness_gaussian_kernel = 0
         self.smoothness_gaussian_std = 1

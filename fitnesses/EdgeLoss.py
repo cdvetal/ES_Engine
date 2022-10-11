@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 
-from .fitness_interface import FitnessInterface, map_number
+from .fitness_interface import FitnessInterface
+from utils import map_number
 
 
 class EdgeLoss(FitnessInterface):

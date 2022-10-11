@@ -6,7 +6,8 @@ import torchvision
 from torch import nn
 from torch.nn import functional as F
 
-from .fitness_interface import FitnessInterface, wget_file
+from .fitness_interface import FitnessInterface
+from utils import wget_file
 
 
 class AestheticLoss(FitnessInterface):

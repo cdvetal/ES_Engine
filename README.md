@@ -30,6 +30,20 @@ Each image is generated using a "renderer" algorithm located in the render subdi
 ## Scoring system
 The scoring system is based on the use of pre-trained classifiers. Each classifier is located in the classifiers subdirectory and can be tested using the test_classifier.py script. Each classifier contains three important features, a preprocessing function, a scoring function and a target size. The first one is a function that applies the required preprocess to the input image. The second one is a function that receives the preprocessed image and returns a list of floats. Lastly, the target_size is a set of two values that specify the size of their input. The output of the predict function is a list of values which represent the confidence of the classifier on the input image being each of the Image Net classes. These values are then used as fitness to guide the evolution process and are ranged from 0.0 to 1.0. Multiple classifiers can be used where the reward value is calculated based on the sum of the scores for each classifier.
 
+### Different Losses and examples
+
+| Original                               | Aesthetic                              |
+|----------------------------------------|----------------------------------------|
+| ![original](./images/original.png)     | ![aesthetic](./images/aesthetic.png)   |
+| Edge                                   | Gaussian                               |
+| ![edge](./images/edge.png)             | ![gaussian](./images/gaussian.png)     |
+| Palette                                | Resmem                                 |
+| ![palette](./images/palette.png)       | ![resmem](./images/resmem.png)         |
+| Saturation                             | Smoothness                             |
+| ![saturation](./images/saturation.png) | ![smoothness](./images/smoothness.png) |
+| Style                                  | Symmetry                               |
+| ![style](./images/style.png)           | ![symmetry](./images/symmetry.png)     |
+
 ## Setup
 It requires a python version higher than 3.7 and a cudatoolbox version higher than 9.0.
 - It might be necessary additional steps before installing the requirements:
