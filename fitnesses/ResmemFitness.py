@@ -18,9 +18,9 @@ recenter = transforms.Compose((
 )
 
 
-class ResmemLoss(FitnessInterface):
+class ResmemFitness(FitnessInterface):
     def __init__(self):
-        super(ResmemLoss, self).__init__()
+        super(ResmemFitness, self).__init__()
         # make sure resmem has model file
         if not os.path.exists(resmem.path):
             wget_file(resmem_url, resmem.path)

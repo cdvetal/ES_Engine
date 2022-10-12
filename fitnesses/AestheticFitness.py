@@ -10,9 +10,9 @@ from .fitness_interface import FitnessInterface
 from utils import wget_file
 
 
-class AestheticLoss(FitnessInterface):
+class AestheticFitness(FitnessInterface):
     def __init__(self, model=None, preprocess=None, clip_model="ViT-B/32"):
-        super(AestheticLoss, self).__init__()
+        super(AestheticFitness, self).__init__()
         self.aesthetic_target = 1
         # Only available here: https://twitter.com/RiversHaveWings/status/1472346186728173568
         self.model_path = Path("models/ava_vit_b_16_linear.pth")
@@ -63,4 +63,5 @@ class AestheticLoss(FitnessInterface):
 
         aes_rating = self.ae_reg(F.normalize(image_features.float(), dim=-1)).to(self.device)
         aes_loss = (aes_rating - self.target_rating).square().mean() * 0.02
+
         return self.aesthetic_weight * aes_loss

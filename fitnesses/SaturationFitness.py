@@ -18,5 +18,6 @@ class SaturationLoss(FitnessInterface):
         std_rggb = torch.sqrt(rg_std ** 2 + yb_std ** 2)
         mean_rggb = torch.sqrt(rg_mean ** 2 + yb_mean ** 2)
         colorfullness = std_rggb + .3 * mean_rggb
+
         return -colorfullness * self.saturation_weight / 10.0
 

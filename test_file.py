@@ -8,6 +8,6 @@ img = Image.open("ES_Engine/dogcat.png").convert('RGB')
 img = TF.to_tensor(img).unsqueeze(0)
 fits = [ClipPrompt("a painting of superman by Van Gogh")]
 
-loss = calculate_fitness(fits, img).item()
+fitness = calculate_fitness(fits, img).item()
 
-print(loss)
+print(fitness)
