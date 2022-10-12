@@ -18,9 +18,9 @@ def gkern(ylen=256, xlen=256, stdy=128, stdx=128):
     return gkern2d
 
 
-class GaussianLoss(FitnessInterface):
+class GaussianFitness(FitnessInterface):
     def __init__(self, ):
-        super(GaussianLoss, self).__init__()
+        super(GaussianFitness, self).__init__()
 
         self.gaussian_weight = -1
         self.gaussian_std = (40, 40)

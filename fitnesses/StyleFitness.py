@@ -446,24 +446,24 @@ def strotss_loss(out_tensor, style_tensor, content_weight=1.0 * 16.0,
     return total_loss
 
 
-class StyleLoss(FitnessInterface):
+class StyleFitness(FitnessInterface):
     def __init__(self, style_file=None):
-        super(StyleLoss, self).__init__()
+        super(StyleFitness, self).__init__()
 
         self.resized = None
 
-        self.styleloss_content_weight = -32
-        self.styleloss_ospace = "uniform"
-        self.styleloss_skip = 100
-        self.styleloss_every = 1
+        self.stylefitness_content_weight = -32
+        self.stylefitness_ospace = "uniform"
+        self.stylefitness_skip = 100
+        self.stylefitness_every = 1
 
         if style_file:
             self.style = Image.open(style_file)
 
-        self.extractor = Vgg16_Extractor(space=self.styleloss_ospace).to(self.device)
+        self.extractor = Vgg16_Extractor(space=self.stylefitness_ospace).to(self.device)
 
     def evaluate(self, img):
         if self.resized is None:
             self.resized = TF.to_tensor(self.style).to(self.device).unsqueeze(0)
             self.resized = TF.resize(self.resized, img.size()[2:4], TF.InterpolationMode.BICUBIC)
-        return strotss_loss(img, self.resized, self.styleloss_content_weight, extractor=self.extractor)
+        return strotss_loss(img, self.resized, self.stylefitness_content_weight, extractor=self.extractor)

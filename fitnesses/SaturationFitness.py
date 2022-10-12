@@ -3,9 +3,9 @@ import torch
 from .fitness_interface import FitnessInterface
 
 
-class SaturationLoss(FitnessInterface):
+class SaturationFitness(FitnessInterface):
     def __init__(self):
-        super(SaturationLoss, self).__init__()
+        super(SaturationFitness, self).__init__()
 
         self.saturation_weight = -1
 

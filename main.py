@@ -20,8 +20,6 @@ from config import *
 from render import *
 from fitnesses import *
 
-# TODO - Mudar de loss para fitness
-
 render_table = {
     "chars": CharsRenderer,
     "pylinhas": PylinhasRenderer,

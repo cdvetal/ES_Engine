@@ -5,9 +5,9 @@ from .fitness_interface import FitnessInterface
 from utils import map_number
 
 
-class EdgeLoss(FitnessInterface):
+class EdgeFitness(FitnessInterface):
     def __init__(self):
-        super(EdgeLoss, self).__init__()
+        super(EdgeFitness, self).__init__()
 
         self.edge_weight = -1
 

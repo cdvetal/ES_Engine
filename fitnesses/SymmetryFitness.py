@@ -4,9 +4,9 @@ from torch import nn
 from .fitness_interface import FitnessInterface
 
 
-class SymmetryLoss(FitnessInterface):
+class SymmetryFitness(FitnessInterface):
     def __init__(self):
-        super(SymmetryLoss, self).__init__()
+        super(SymmetryFitness, self).__init__()
 
         self.symmetry_weight = -1
 

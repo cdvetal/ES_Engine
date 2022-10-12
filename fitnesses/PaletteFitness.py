@@ -3,9 +3,9 @@ import torch
 from .fitness_interface import FitnessInterface
 
 
-class PaletteLoss(FitnessInterface):
+class PaletteFitness(FitnessInterface):
     def __init__(self, palette):
-        super(PaletteLoss, self).__init__()
+        super(PaletteFitness, self).__init__()
 
         self.palette_weight = -1
         self.target_palette = torch.FloatTensor(palette).requires_grad_(False).to(self.device)
