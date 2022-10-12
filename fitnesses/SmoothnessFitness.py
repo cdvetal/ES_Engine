@@ -73,11 +73,11 @@ class GaussianSmoothing(nn.Module):
         return self.conv(input, weight=self.weight, groups=self.groups)
 
 
-class SmoothnessLoss(FitnessInterface):
+class SmoothnessFitness(FitnessInterface):
     def __init__(self):
-        super(SmoothnessLoss, self).__init__()
+        super(SmoothnessFitness, self).__init__()
 
-        self.smoothness_weight = -1
+        self.smoothness_weight = -0.5
         self.smoothness_type = 'log'
         self.smoothness_gaussian_kernel = 0
         self.smoothness_gaussian_std = 1

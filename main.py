@@ -57,7 +57,6 @@ def setup_args():
     parser.add_argument('--init-mu', default=INIT_MU, type=float, help='Mean value for the initialization of the population. Default is {}.'.format(INIT_MU))
     parser.add_argument('--init-sigma', default=INIT_SIGMA, type=float, help='Standard deviation value for the initialization of the population. Default is {}.'.format(INIT_SIGMA))
     parser.add_argument('--sigma', default=SIGMA, type=float, help='The initial standard deviation of the distribution. Default is {}.'.format(SIGMA))
-    parser.add_argument('--clip-influence', default=CLIP_INFLUENCE, type=float, help='The influence CLIP has in the generation (0.0 - 1.0). Default is {}.'.format(CLIP_INFLUENCE))
     parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
     parser.add_argument('--clip-prompts', default=None, help='CLIP prompts to use for the generation. Default is the target class')
     parser.add_argument('--input-image', default=None, help='Image to use as input.')
@@ -67,8 +66,8 @@ def setup_args():
 
     args = parser.parse_args()
 
-    # args.clip_prompts = "a beautiful landscape"
-    # args.input_image = "input_image.jpg"
+    args.clip_prompts = "a small house in the swiss alps"
+    # args.input_image = "dogcat.png"
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
@@ -79,7 +78,8 @@ def setup_args():
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
         args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
     else:
-        args.experiment_name = f"{args.renderer_type}_L{args.num_lines}_{args.target_class}_CLIP{args.clip_influence}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        prompt = args.clip_prompts.replace(" ", "_")
+        args.experiment_name = f"{args.renderer_type}_L{args.num_lines}_{prompt}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
         args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
         args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
@@ -99,10 +99,6 @@ def setup_args():
         random.seed(args.random_seed)
         np.random.seed(args.random_seed)
         torch.manual_seed(args.random_seed)
-        # TODO: not do this or maybe there is a tf2 way?
-        # tf.compat.v1.set_random_seed(args.random_seed)
-        # TODO: Confirm this works
-        # tf.random.set_seed(args.random_seed)
 
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Using device:", args.device)
@@ -122,8 +118,6 @@ def setup_args():
         print("- ", key)
     """
 
-    args.clip_influence = min(1.0, max(0.0, args.clip_influence))  # clip value to (0.0 - 1.0)
-
     if args.clip_model not in clip.available_models():
         args.clip_model = "ViT-B/32"
 
@@ -135,19 +129,12 @@ def setup_args():
 
     print("CLIP module loaded.")
 
-    """
-    if args.clip_influence == 1.0:
-        print("CLIP influence as 1.0. Models removed.")
-        args.active_models = {}
-    """
-
     args.fitnesses = []
     if args.clip_prompts:
         args.fitnesses.append(ClipPrompt(args.clip_prompts, model=args.clip, preprocess=args.preprocess))
 
     if args.input_image:
-        # args.fitnesses.append(InputImage(args.input_image, model=args.clip, preprocess=args.preprocess))
-        pass
+        args.fitnesses.append(InputImage(args.input_image, model=args.clip, preprocess=args.preprocess))
 
     # args.fitnesses.append(PaletteLoss(palette=[[204/255.0, 0/255.0, 204/255.0]]))
     # args.fitnesses.append(AestheticLoss(model=args.clip, preprocess=args.preprocess))

@@ -27,13 +27,13 @@ def main_adam(args):
         cur_iteration = gen
 
         img = renderer.render(individual)
-        loss = calculate_fitness(args.fitnesses, img)
+        fitness = calculate_fitness(args.fitnesses, img)
 
         optimizer.zero_grad()
-        (-loss).backward()
+        (-fitness).backward()
         optimizer.step()
 
-        print(loss)
+        print(fitness)
 
         if args.renderer_type == "vdiff" and gen >= 1:
             lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]

@@ -11,9 +11,10 @@ class BigGANRenderer(RenderingInterface):
 
         self.device = args.device
 
-        self.lr = 0.07
+        self.lr = 0.03
 
-        output_size = args.img_size if args.img_size in [128, 256, 512] else 256
+        # Returns the closest value to the target img_size
+        output_size = min([128, 256, 512], key=lambda x: abs(x - args.img_size))
 
         self.model = BigGAN.from_pretrained(f'biggan-deep-{output_size}')
         self.model.to(self.device).eval()
@@ -62,5 +63,3 @@ class BigGANRenderer(RenderingInterface):
         out = self.model(input_ind[0], 1)
 
         return out
-
-

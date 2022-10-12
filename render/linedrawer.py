@@ -3,7 +3,6 @@ import random
 import numpy as np
 import pydiffvg
 import torch
-from torchvision.utils import save_image
 
 from render.renderinterface import RenderingInterface
 
@@ -136,4 +135,6 @@ class LineDrawRenderer(RenderingInterface):
         img = img[:, :, :3]
         img = img.unsqueeze(0)
         img = img.permute(0, 3, 1, 2)  # NHWC -> NCHW
+
+        pydiffvg.save_svg('out.svg', self.img_size, self.img_size, self.shapes, self.shape_groups)
         return img

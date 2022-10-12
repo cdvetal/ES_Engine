@@ -10,6 +10,7 @@ from deap import tools
 from torch import optim
 from torchvision.utils import save_image
 
+from fitnesses import calculate_fitness
 from utils import save_gen_best
 
 cur_iteration = 0
@@ -23,15 +24,15 @@ def evaluate(args, individual):
     optimizer = optim.Adam(ind, lr=args.lr)
 
     img = renderer.render(ind)
-    final_loss = calculate_fitness(args, img)
+    fitness = calculate_fitness(args, img)
 
     for gen in range(args.adam_steps):
         optimizer.zero_grad()
-        (-final_loss).backward()
+        (-fitness).backward()
         optimizer.step()
 
         img = renderer.render(ind)
-        final_loss = calculate_fitness(args, img)
+        fitness = calculate_fitness(args, img)
 
         if args.renderer_type == "vdiff" and gen >= 1:
             lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
@@ -45,14 +46,14 @@ def evaluate(args, individual):
 
         save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_{gen}.png")
 
-    print(final_loss)
+    print(fitness)
 
     if args.lamarck:
         individual[:] = renderer.get_individual(ind)
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
-    return [final_loss]
+    return [fitness]
 
 
 def main_cma_es(args):
