@@ -3,13 +3,13 @@ IMG_SIZE = 512
 
 EVOLUTION_TYPE = 'adam'
 
-NUM_LINES = 24
+NUM_LINES = 100
 
 SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
 POP_SIZE = 100
-N_GENS = 100
+N_GENS = 200
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25
@@ -17,8 +17,8 @@ SIGMA = 0.1
 
 LAMARCK = False
 ADAM_STEPS = 0
-LR = 0.03
-# LR = 1.
+# LR = 0.1
+LR = 1.
 # LR = 0.1
 
 TARGET_FITNESS = 99.999
@@ -34,7 +34,7 @@ TARGET_CLASS = "birdhouse"
 SAVE_ALL = False
 VERBOSE = False
 
-RENDERER = "biggan"
+RENDERER = "clipdraw"
 
 model_groups = {
     "london,": "xception,vgg16,vgg19,resnet50,resnet50v2,resnet101,resnet152,resnet101v2,resnet152v2,inceptionv3,inceptionresnetv2,mobilenet,mobilenetv2,densenet121,densenet169,densenet201,nasnet,nasnetmobile,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7,",

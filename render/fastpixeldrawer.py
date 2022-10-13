@@ -1,16 +1,6 @@
 import numpy as np
 import torch
 from torch.nn import functional as F
-from torchvision.transforms import functional as TF
-
-from render.renderinterface import RenderingInterface
-
-import random
-
-import numpy as np
-import pydiffvg
-import torch
-from torchvision.utils import save_image
 
 from render.renderinterface import RenderingInterface
 
@@ -23,7 +13,7 @@ class FastPixelRenderer(RenderingInterface):
 
         self.img_size = args.img_size
 
-        self.num_cols, self.num_rows = [40, 40]
+        self.num_cols, self.num_rows = [args.num_lines, args.num_lines]
 
         self.lr = 0.1
 

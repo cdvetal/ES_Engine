@@ -25,8 +25,6 @@ class ClipDrawRenderer(RenderingInterface):
         self.x = None
 
     def chunks(self, array):
-        # array = torch.tensor(array, dtype=torch.float)
-        # return array.view(self.num_lines, (self.num_segments * 3) + 1, 2)
         return np.reshape(array, (self.num_lines, (self.num_segments * 3) + 1, 2))
 
     def generate_individual(self):
@@ -93,13 +91,17 @@ class ClipDrawRenderer(RenderingInterface):
             shapes.append(path)
             path_group = pydiffvg.ShapeGroup(shape_ids=torch.tensor([len(shapes) - 1]), fill_color=None,
                                              stroke_color=torch.tensor(
-                                                 [random.random(), random.random(), random.random(), random.random()]))
+                                                 [random.random(), random.random(), random.random(), 1.0]))
             shape_groups.append(path_group)
 
         points_vars = []
         for path in shapes:
             path.points.requires_grad = True
             points_vars.append(path.points)
+
+        # for group in shape_groups:
+        #     group.stroke_color.requires_grad = True
+        #     points_vars.append(group.stroke_color)
 
         self.shapes = shapes
         self.shape_groups = shape_groups
