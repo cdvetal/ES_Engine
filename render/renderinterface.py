@@ -5,10 +5,10 @@ class RenderingInterface:
     def generate_individual(self):
         pass
 
-    def get_individual(self, adam_ind):
+    def get_individual(self):
         pass
 
-    def to_adam(self, individual):
+    def to_adam(self, individual, gradients=True):
         pass
 
     def chunks(self, array):
@@ -17,6 +17,6 @@ class RenderingInterface:
     def __str__(self):
         pass
 
-    def render(self, input_ind):
+    def render(self):
         pass
 

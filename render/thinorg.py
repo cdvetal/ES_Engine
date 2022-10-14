@@ -24,28 +24,35 @@ class ThinOrganicRenderer(RenderingInterface):
 
         self.genotype_size = 13
 
+        self.individual = None
+
     def chunks(self, array):
         return np.reshape(array, (self.num_lines, self.genotype_size))
 
     def generate_individual(self):
         return np.random.rand(self.num_lines, self.genotype_size).flatten()
 
-    def to_adam(self, individual):
-        ind_copy = np.copy(individual)
-        ind_copy = self.chunks(ind_copy)
-        ind_copy = torch.tensor(ind_copy).float().to(self.device)
-        ind_copy.requires_grad = True
-        return [ind_copy]
+    def to_adam(self, individual, gradients=True):
+        self.individual = np.copy(individual)
+        self.individual = self.chunks(self.individual)
+        self.individual = torch.tensor(self.individual).float().to(self.device)
 
-    def get_individual(self, adam_ind):
-        return adam_ind[0].cpu().detach().numpy().flatten()
+        if gradients:
+            self.individual.requires_grad = True
+
+        optimizer = torch.optim.Adam([self.individual], lr=1.0)
+
+        return [optimizer]
+
+    def get_individual(self):
+        return self.individual.cpu().detach().numpy().flatten()
 
     def __str__(self):
         return "thinorg"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, input_ind):
-        input_ind = input_ind[0]
+    def render(self):
+        input_ind = self.individual
         input_ind = input_ind.cpu().detach().numpy()
 
         # split input array into header and rest

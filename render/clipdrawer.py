@@ -51,7 +51,7 @@ class ClipDrawRenderer(RenderingInterface):
         individual = np.array(individual)
         return individual.flatten()
 
-    def get_individual(self, _):
+    def get_individual(self):
         individual = []
         for path in self.shapes:
             points = torch.tensor(path.points)
@@ -61,7 +61,7 @@ class ClipDrawRenderer(RenderingInterface):
         individual = np.array(individual).flatten()
         return individual
 
-    def to_adam(self, individual):
+    def to_adam(self, individual, gradients=True):
         ind_copy = np.copy(individual)
 
         ind_copy = self.chunks(ind_copy)
@@ -95,23 +95,34 @@ class ClipDrawRenderer(RenderingInterface):
             shape_groups.append(path_group)
 
         points_vars = []
+        stroke_width_vars = []
+        color_vars = []
         for path in shapes:
-            path.points.requires_grad = True
+            if gradients:
+                path.points.requires_grad = True
             points_vars.append(path.points)
 
-        # for group in shape_groups:
-        #     group.stroke_color.requires_grad = True
-        #     points_vars.append(group.stroke_color)
+            if gradients:
+                path.stroke_width.requires_grad = True
+            stroke_width_vars.append(path.stroke_width)
+        for group in shape_groups:
+            if gradients:
+                group.stroke_color.requires_grad = True
+            color_vars.append(group.stroke_color)
+
+        points_optim = torch.optim.Adam(points_vars, lr=1.0)
+        width_optim = torch.optim.Adam(stroke_width_vars, lr=0.1)
+        color_optim = torch.optim.Adam(color_vars, lr=0.01)
 
         self.shapes = shapes
         self.shape_groups = shape_groups
 
-        return points_vars
+        return [points_optim, width_optim, color_optim]
 
     def __str__(self):
         return "clipdraw"
 
-    def render(self, input_ind):
+    def render(self):
         render = pydiffvg.RenderFunction.apply
 
         scene_args = pydiffvg.RenderFunction.serialize_scene(

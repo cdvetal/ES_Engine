@@ -21,10 +21,7 @@ class BigGANRenderer(RenderingInterface):
 
         self.num_latents = len(self.model.config.layers) + 1
 
-        self.genotype_size = (self.num_latents * 256)
-        self.real_genotype_size = self.genotype_size
-
-        self.x = None
+        self.individual = None
 
     def generate_individual(self):
         z_dim = 128
@@ -39,15 +36,20 @@ class BigGANRenderer(RenderingInterface):
 
         return ind
 
-    def get_individual(self, adam_ind):
-        return adam_ind[0].cpu().detach().numpy().flatten()
+    def get_individual(self):
+        return self.individual.cpu().detach().numpy().flatten()
 
-    def to_adam(self, individual):
-        ind_copy = np.copy(individual)
-        ind_copy = self.chunks(ind_copy)
-        ind_copy = torch.tensor(ind_copy).float().to(self.device)
-        ind_copy.requires_grad = True
-        return [ind_copy]
+    def to_adam(self, individual, gradients=True):
+        self.individual = np.copy(individual)
+        self.individual = self.chunks(self.individual)
+        self.individual = torch.tensor(self.individual).float().to(self.device)
+
+        if gradients:
+            self.individual.requires_grad = True
+
+        optimizer = torch.optim.Adam([self.individual], lr=0.03)
+
+        return [optimizer]
 
     def chunks(self, array):
         # if type(array) is list:
@@ -59,7 +61,7 @@ class BigGANRenderer(RenderingInterface):
         return "biggan"
 
     # input: array of real vectors, length 8, each component normalized 0-1
-    def render(self, input_ind):
-        out = self.model(input_ind[0], 1)
+    def render(self):
+        out = self.model(self.individual, 1)
 
         return out

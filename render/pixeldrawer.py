@@ -1,10 +1,8 @@
 import random
 
-import cairo
 import numpy as np
 import pydiffvg
 import torch
-from PIL import Image
 
 from render.renderinterface import RenderingInterface
 
@@ -98,7 +96,7 @@ class PixelRenderer(RenderingInterface):
         individual = np.array(colors)
         return individual.flatten()
 
-    def get_individual(self, _):
+    def get_individual(self):
         individual = []
         for group in self.shape_groups:
             colors = group.fill_color.clone().detach()
@@ -107,7 +105,7 @@ class PixelRenderer(RenderingInterface):
         individual = np.array(individual).flatten()
         return individual
 
-    def to_adam(self, individual):
+    def to_adam(self, individual, gradients=True):
         ind_copy = np.copy(individual)
 
         ind_copy = self.chunks(ind_copy)
@@ -144,15 +142,18 @@ class PixelRenderer(RenderingInterface):
 
         color_vars = []
         for group in shape_groups:
-            group.fill_color.requires_grad = True
+            if gradients:
+                group.fill_color.requires_grad = True
             color_vars.append(group.fill_color)
+
+        color_optim = torch.optim.Adam(color_vars, lr=0.01)
 
         self.shapes = shapes
         self.shape_groups = shape_groups
 
-        return color_vars
+        return [color_optim]
 
-    def render(self, input_ind):
+    def render(self):
         render = pydiffvg.RenderFunction.apply
         scene_args = pydiffvg.RenderFunction.serialize_scene(self.img_size, self.img_size, self.shapes,
                                                              self.shape_groups)
