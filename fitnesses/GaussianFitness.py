@@ -26,7 +26,7 @@ class GaussianFitness(FitnessInterface):
         self.gaussian_std = (40, 40)
         self.gaussian_color = (255, 255, 255)
 
-    def evaluate(self, img):
+    def evaluate(self, img, normalization=False):
         gaus = gkern(img.size()[2], img.size()[3], *self.gaussian_std).to(self.device)
         color = torch.zeros(img.size()).to(self.device)
         Rval, Gval, Bval = self.gaussian_color

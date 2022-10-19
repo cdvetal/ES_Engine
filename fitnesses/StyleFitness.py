@@ -462,7 +462,7 @@ class StyleFitness(FitnessInterface):
 
         self.extractor = Vgg16_Extractor(space=self.stylefitness_ospace).to(self.device)
 
-    def evaluate(self, img):
+    def evaluate(self, img, normalization=False):
         if self.resized is None:
             self.resized = TF.to_tensor(self.style).to(self.device).unsqueeze(0)
             self.resized = TF.resize(self.resized, img.size()[2:4], TF.InterpolationMode.BICUBIC)

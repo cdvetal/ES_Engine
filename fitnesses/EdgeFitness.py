@@ -24,7 +24,7 @@ class EdgeFitness(FitnessInterface):
             t = self.edge_thickness
             self.edge_margins = (t, t, t, t)
 
-    def evaluate(self, img):
+    def evaluate(self, img, normalization=False):
         zers = torch.zeros(img.size()).to(self.device)
         Rval, Gval, Bval = self.edge_color
         zers[:, 0, :, :] = Rval

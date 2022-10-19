@@ -51,7 +51,7 @@ class AestheticFitness(FitnessInterface):
             self.model = model
             self.preprocess = preprocess
 
-    def evaluate(self, img):
+    def evaluate(self, img, normalization=False):
         p_s = []
 
         _, channels, sideX, sideY = img.shape
@@ -64,9 +64,10 @@ class AestheticFitness(FitnessInterface):
         # convert_tensor = torchvision.transforms.ToTensor()
         into = torch.cat(p_s, 0).to(self.device)
 
-        normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
-                                                     (0.26862954, 0.26130258, 0.27577711))
-        into = normalize((into + 1) / 2)
+        if normalization:
+            normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
+                                                         (0.26862954, 0.26130258, 0.27577711))
+            into = normalize((into + 1) / 2)
 
         image_features = self.model.encode_image(into)
 

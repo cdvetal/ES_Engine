@@ -44,7 +44,7 @@ class ResmemFitness(FitnessInterface):
 
         self.resmem_weight = -1
 
-    def evaluate(self, img):
+    def evaluate(self, img, normalization=False):
         # print(images.shape)
         image_x = recenter(img)
         # print(image_x.shape)
