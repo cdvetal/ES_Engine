@@ -12,11 +12,11 @@ class FitnessInterface:
         pass
 
 
-def calculate_fitness(fitnesses, img, normalization):
+def calculate_fitness(fitnesses, img, normalization=False):
     fitness_list = []
 
     for fitness in fitnesses:
-        fitness_list.append(fitness.evaluate(img, normalization))
+        fitness_list.append(fitness.evaluate(img, normalization=normalization))
 
     fitness_list = torch.stack(fitness_list)
     final_fitness = torch.sum(fitness_list)
