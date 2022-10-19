@@ -104,4 +104,5 @@ class SmoothnessFitness(FitnessInterface):
             sharpness = torch.log(torch.ones_like(sharpness) + sharpness)
         sharpness = torch.mean(sharpness)
 
+        # Sharpness must be multiplied by a negative value to obtain fitness of smoothness
         return sharpness * self.smoothness_weight

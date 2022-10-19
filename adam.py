@@ -25,7 +25,7 @@ def main_adam(args):
         cur_iteration = gen
 
         img = renderer.render()
-        fitness = calculate_fitness(args.fitnesses, img)
+        fitness = calculate_fitness(args.fitnesses, img, args.normalization)
 
         for optimizer in optimizers:
             optimizer.zero_grad()
@@ -35,7 +35,7 @@ def main_adam(args):
         for optimizer in optimizers:
             optimizer.step()
 
-        print(fitness)
+        print(fitness.item())
 
         if args.renderer_type == "vdiff":
             # optimizers = renderer.to_adam(individual, gen=gen)

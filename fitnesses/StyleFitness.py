@@ -452,7 +452,7 @@ class StyleFitness(FitnessInterface):
 
         self.resized = None
 
-        self.stylefitness_content_weight = -32
+        self.stylefitness_content_weight = -1
         self.stylefitness_ospace = "uniform"
         self.stylefitness_skip = 100
         self.stylefitness_every = 1
@@ -466,4 +466,4 @@ class StyleFitness(FitnessInterface):
         if self.resized is None:
             self.resized = TF.to_tensor(self.style).to(self.device).unsqueeze(0)
             self.resized = TF.resize(self.resized, img.size()[2:4], TF.InterpolationMode.BICUBIC)
-        return strotss_loss(img, self.resized, self.stylefitness_content_weight, extractor=self.extractor)
+        return strotss_loss(img, self.resized, self.stylefitness_content_weight * 16, extractor=self.extractor)

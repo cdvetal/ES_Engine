@@ -16,4 +16,8 @@ class PaletteFitness(FitnessInterface):
         best_guesses = palette_dists.argmin(axis=0)
         diffs = _pixels - self.target_palette[best_guesses]
         palette_loss = torch.mean(torch.norm(diffs, 2, dim=1)) * img.shape[0]
-        return palette_loss * self.palette_weight / 10.0
+
+        # Loss must be multiplied by a negative value to obtain fitness
+        palette_fitness = palette_loss * self.palette_weight / 10.0
+
+        return palette_fitness

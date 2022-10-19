@@ -13,5 +13,9 @@ class SymmetryFitness(FitnessInterface):
     def evaluate(self, img):
         mseloss = nn.MSELoss()
         cur_loss = mseloss(img, torch.flip(img, [3]))
-        return cur_loss * self.symmetry_weight
+
+        # Loss must be multiplied by a negative value to obtain fitness
+        symmetry_fitness = cur_loss * self.symmetry_weight / 10.0
+
+        return symmetry_fitness
 

@@ -39,4 +39,8 @@ class GaussianFitness(FitnessInterface):
         loss = loss * torch.abs(1 - gaus)
 
         cur_loss = torch.mean(loss)
-        return cur_loss * self.gaussian_weight
+
+        # Loss must be multiplied by a negative value to obtain fitness
+        gaussian_fitness = cur_loss * self.gaussian_weight
+
+        return gaussian_fitness

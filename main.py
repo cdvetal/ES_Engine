@@ -66,7 +66,7 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a computer generated abstract image"
+    args.clip_prompts = "a painting of superman by van gogh"
     # args.input_image = "dogcat.png"
 
     if args.from_checkpoint:
@@ -112,6 +112,8 @@ def setup_args():
     # Use GPU if available
     pydiffvg.set_use_gpu(torch.cuda.is_available())
     pydiffvg.set_device(args.device)
+
+    args.normalization = (args.renderer_type == "biggan" or args.renderer_type == "vdiff")
 
     args.renderer = render_table[args.renderer_type](args)
 

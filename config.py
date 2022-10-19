@@ -3,22 +3,22 @@ IMG_SIZE = 256
 
 EVOLUTION_TYPE = 'adam'
 
-NUM_LINES = 16
+NUM_LINES = 20
 
 SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
-POP_SIZE = 2
+POP_SIZE = 100
 N_GENS = 200
 # Parameters for Gaussian Mutation
 INIT_MU = 0.5
 INIT_SIGMA = 0.25
 SIGMA = 0.1
 
-LAMARCK = True
-ADAM_STEPS = 10
-LR = 0.1
-# LR = 1.
+LAMARCK = False
+ADAM_STEPS = 0
+# LR = 0.1
+LR = 1.
 # LR = 0.03
 
 TARGET_FITNESS = 0.999

@@ -12,7 +12,7 @@ class EdgeFitness(FitnessInterface):
     def __init__(self):
         super(EdgeFitness, self).__init__()
 
-        self.edge_weight = -1
+        self.edge_weight = -0.1
 
         self.edge_thickness = 5
         self.edge_margins = None
@@ -55,7 +55,10 @@ class EdgeFitness(FitnessInterface):
         if self.global_color_weight:
             gloss = mseloss(img[:, :, :, :], zers[:, :, :, :]) * self.global_color_weight
             cur_loss += gloss
-        cur_loss *= self.edge_color_weight
-        return cur_loss
+
+        # Loss must be multiplied by a negative value to obtain fitness
+        edge_fitness = cur_loss * self.edge_color_weight
+
+        return edge_fitness
 
 
