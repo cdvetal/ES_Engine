@@ -2,7 +2,10 @@ import torch
 from torch import nn
 
 from .fitness_interface import FitnessInterface
-from utils import map_number
+
+
+def map_number(n, start1, stop1, start2, stop2):
+    return ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2
 
 
 class EdgeFitness(FitnessInterface):

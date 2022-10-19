@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import numpy as np
 from omegaconf import OmegaConf
 from taming.models import vqgan
-import torchvision
 
 from render.renderinterface import RenderingInterface
 from utils import create_save_folder
@@ -103,11 +102,10 @@ class VQGANRenderer(RenderingInterface):
 
         self.e_dim = self.model.quantize.e_dim
         self.n_toks = self.model.quantize.n_e
-        z_min = self.model.quantize.embedding.weight.min(dim=0).values[None, :, None, None]
-        z_max = self.model.quantize.embedding.weight.max(dim=0).values[None, :, None, None]
+        # z_min = self.model.quantize.embedding.weight.min(dim=0).values[None, :, None, None]
+        # z_max = self.model.quantize.embedding.weight.max(dim=0).values[None, :, None, None]
         num_resolutions = self.model.decoder.num_resolutions
         f = 2 ** (num_resolutions - 1)
-        # image_size = 224
 
         self.toksX, self.toksY = self.img_size // f, self.img_size // f
 
@@ -115,6 +113,8 @@ class VQGANRenderer(RenderingInterface):
         self.clamp_with_grad = ClampWithGrad.apply
 
         self.lr = 0.1
+
+        self.individual = None
 
     def generate_individual(self):
         one_hot = F.one_hot(torch.randint(self.n_toks, [self.toksY * self.toksX], device=self.device), self.n_toks).float()
@@ -137,17 +137,21 @@ class VQGANRenderer(RenderingInterface):
     def __str__(self):
         return "VQGAN"
 
-    def to_adam(self, individual):
-        ind_copy = np.copy(individual)
+    def to_adam(self, individual, gradients=True):
+        self.individual = np.copy(individual)
 
-        ind_copy = self.chunks(ind_copy)
-        ind_copy = torch.tensor(ind_copy).float().to(self.device)
+        self.individual = self.chunks(self.individual)
+        self.individual = torch.tensor(self.individual).float().to(self.device)
 
-        ind_copy.requires_grad = True
-        return [ind_copy]
+        if gradients:
+            self.individual.requires_grad = True
 
-    def render(self, input_ind):
-        input_ind = input_ind[0]
+        optimizer = torch.optim.Adam([self.individual], lr=0.1)
+
+        return [optimizer]
+
+    def render(self):
+        input_ind = self.individual
         z_q = self.vector_quantize(input_ind.movedim(1, 3), self.model.quantize.embedding.weight).movedim(3, 1)
         out = self.clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
         return out

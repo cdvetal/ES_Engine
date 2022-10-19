@@ -58,7 +58,7 @@ class LineDrawRenderer(RenderingInterface):
         individual = np.array(individual)
         return individual.flatten()
 
-    def get_individual(self, _):
+    def get_individual(self):
         individual = []
         for path in self.shapes[1:]:
             points = path.points.clone().detach()
@@ -68,7 +68,7 @@ class LineDrawRenderer(RenderingInterface):
         individual = np.array(individual).flatten()
         return individual
 
-    def to_adam(self, individual):
+    def to_adam(self, individual, gradients=True):
         ind_copy = np.copy(individual)
 
         ind_copy = self.chunks(ind_copy)
@@ -114,19 +114,28 @@ class LineDrawRenderer(RenderingInterface):
             shape_groups.append(path_group)
 
         points_vars = []
+        stroke_width_vars = []
         for path in shapes[1:]:
-            path.points.requires_grad = True
+            if gradients:
+                path.points.requires_grad = True
             points_vars.append(path.points)
+
+            if gradients:
+                path.stroke_width.requires_grad = True
+            stroke_width_vars.append(path.stroke_width)
+
+        points_optim = torch.optim.Adam(points_vars, lr=1.0)
+        width_optim = torch.optim.Adam(stroke_width_vars, lr=0.1)
 
         self.shapes = shapes
         self.shape_groups = shape_groups
 
-        return points_vars
+        return [points_optim, width_optim]
 
     def __str__(self):
         return "linedraw"
 
-    def render(self, input_ind):
+    def render(self):
         render = pydiffvg.RenderFunction.apply
         scene_args = pydiffvg.RenderFunction.serialize_scene(self.img_size, self.img_size, self.shapes, self.shape_groups)
         img = render(self.img_size, self.img_size, 2, 2, 0, None, *scene_args)

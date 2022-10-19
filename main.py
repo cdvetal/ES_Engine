@@ -66,7 +66,7 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a small house in the swiss alps"
+    args.clip_prompts = "a computer generated abstract image"
     # args.input_image = "dogcat.png"
 
     if args.from_checkpoint:
@@ -78,7 +78,13 @@ def setup_args():
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
         args.checkpoint = "{}/{}".format(save_folder, args.from_checkpoint)
     else:
-        prompt = args.clip_prompts.replace(" ", "_")
+        if args.clip_prompts:
+            prompt = args.clip_prompts.replace(" ", "_")
+        elif args.input_image:
+            prompt = args.input_image
+        else:
+            prompt = args.target_class
+
         args.experiment_name = f"{args.renderer_type}_L{args.num_lines}_{prompt}_{args.random_seed if args.random_seed else datetime.now().strftime('%Y-%m-%d_%H-%M')}"
         args.sub_folder = f"{args.experiment_name}_{args.n_gens}_{args.pop_size}"
         save_folder, sub_folder = create_save_folder(args.save_folder, args.sub_folder)
@@ -136,15 +142,15 @@ def setup_args():
     if args.input_image:
         args.fitnesses.append(InputImage(args.input_image, model=args.clip, preprocess=args.preprocess))
 
-    # args.fitnesses.append(PaletteLoss(palette=[[204/255.0, 0/255.0, 204/255.0]]))
-    # args.fitnesses.append(AestheticLoss(model=args.clip, preprocess=args.preprocess))
-    # args.fitnesses.append(GaussianLoss())
-    # args.fitnesses.append(ResmemLoss())
-    # args.fitnesses.append(SaturationLoss())
-    # args.fitnesses.append(SmoothnessLoss())
-    # args.fitnesses.append(SymmetryLoss())
-    # args.fitnesses.append(StyleLoss(style_file="style.jpg"))
-    # args.fitnesses.append(EdgeLoss())
+    # args.fitnesses.append(PaletteFitness(palette=[[0/255.0, 0/255.0, 0/255.0], [255/255.0, 241/255.0, 232/255.0]]))
+    # args.fitnesses.append(AestheticFitness(model=args.clip, preprocess=args.preprocess))
+    # args.fitnesses.append(GaussianFitness())
+    # args.fitnesses.append(ResmemFitness())
+    # args.fitnesses.append(SaturationFitness())
+    # args.fitnesses.append(SmoothnessFitness())
+    # args.fitnesses.append(SymmetryFitness())
+    # args.fitnesses.append(StyleFitness(style_file="style.jpg"))
+    # args.fitnesses.append(EdgeFitness())
 
     if args.pop_size <= 1:
         print(f"Population size as {args.pop_size}, changing to Adam.")

@@ -19,20 +19,22 @@ cur_iteration = 0
 def evaluate(args, individual):
     renderer = args.renderer
 
-    ind = renderer.to_adam(individual)
+    optimizers = renderer.to_adam(individual)
 
-    optimizer = optim.Adam(ind, lr=args.lr)
-
-    img = renderer.render(ind)
-    fitness = calculate_fitness(args, img)
+    img = renderer.render()
+    fitness = calculate_fitness(args.fitnesses, img)
 
     for gen in range(args.adam_steps):
-        optimizer.zero_grad()
-        (-fitness).backward()
-        optimizer.step()
+        for optimizer in optimizers:
+            optimizer.zero_grad()
 
-        img = renderer.render(ind)
-        fitness = calculate_fitness(args, img)
+        (-fitness).backward()
+
+        for optimizer in optimizers:
+            optimizer.step()
+
+        img = renderer.render()
+        fitness = calculate_fitness(args.fitnesses, img)
 
         if args.renderer_type == "vdiff" and gen >= 1:
             lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
@@ -49,7 +51,7 @@ def evaluate(args, individual):
     print(fitness)
 
     if args.lamarck:
-        individual[:] = renderer.get_individual(ind)
+        individual[:] = renderer.get_individual()
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -96,10 +98,11 @@ def main_cma_es(args):
 
         if args.save_all:
             for index, ind in enumerate(population):
-                img_array = renderer.chunks(ind)
-                img = renderer.render(img_array)
+                _ = renderer.to_adam(ind, gradients=False)
+                img = renderer.render()
                 # img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_{index}.png")
-                img = (img + 1) / 2
+                if torch.min(img) < 0.0:
+                    img = (img + 1) / 2
                 save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_{index}.png")
 
         # Update the strategy with the evaluated individuals
@@ -117,9 +120,10 @@ def main_cma_es(args):
         if halloffame is not None:
             save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
             print("Best individual:", halloffame[0].fitness.values)
-            ind = renderer.to_adam(halloffame[0])
-            img = renderer.render(ind)
-            img = (img + 1) / 2
+            _ = renderer.to_adam(halloffame[0], gradients=False)
+            img = renderer.render()
+            if torch.min(img) < 0.0:
+                img = (img + 1) / 2
             save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
 
         if halloffame[0].fitness.values[0] >= args.target_fit:

@@ -18,29 +18,33 @@ def main_adam(args):
     renderer = args.renderer
 
     individual = renderer.generate_individual()
-    individual = renderer.to_adam(individual)
-
-    optimizer = optim.Adam(individual, lr=args.lr)
+    optimizers = renderer.to_adam(individual)
 
     for gen in range(args.n_gens):
         print("Generation:", gen)
         cur_iteration = gen
 
-        img = renderer.render(individual)
+        img = renderer.render()
         fitness = calculate_fitness(args.fitnesses, img)
 
-        optimizer.zero_grad()
+        for optimizer in optimizers:
+            optimizer.zero_grad()
+
         (-fitness).backward()
-        optimizer.step()
+
+        for optimizer in optimizers:
+            optimizer.step()
 
         print(fitness)
 
-        if args.renderer_type == "vdiff" and gen >= 1:
+        if args.renderer_type == "vdiff":
+            # optimizers = renderer.to_adam(individual, gen=gen)
             lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
-            individual = renderer.makenoise(gen, individual)
-            individual.requires_grad_()
-            individual = [individual]
-            optimizer = optim.Adam(individual, lr=min(lr * 0.001, 0.01))
+            renderer.individual = renderer.makenoise(gen)
+            renderer.individual.requires_grad_()
+            to_optimize = [renderer.individual]
+            opt = optim.Adam(to_optimize, lr=min(lr * 0.001, 0.01))
+            optimizers = [opt]
 
         if torch.min(img) < 0.0:
             img = (img + 1) / 2

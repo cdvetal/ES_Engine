@@ -1,16 +1,6 @@
 import numpy as np
 import torch
 from torch.nn import functional as F
-from torchvision.transforms import functional as TF
-
-from render.renderinterface import RenderingInterface
-
-import random
-
-import numpy as np
-import pydiffvg
-import torch
-from torchvision.utils import save_image
 
 from render.renderinterface import RenderingInterface
 
@@ -23,9 +13,11 @@ class FastPixelRenderer(RenderingInterface):
 
         self.img_size = args.img_size
 
-        self.num_cols, self.num_rows = [40, 40]
+        self.num_cols, self.num_rows = [args.num_lines, args.num_lines]
 
         self.lr = 0.1
+
+        self.individual = None
 
         self.pixel_size = tuple([self.num_rows, self.num_cols])
 
@@ -36,24 +28,27 @@ class FastPixelRenderer(RenderingInterface):
         individual = np.random.rand(3, self.num_cols, self.num_rows)
         return individual.flatten()
 
-    def get_individual(self, _):
+    def get_individual(self):
         return None
 
-    def to_adam(self, individual):
-        ind_copy = np.copy(individual)
+    def to_adam(self, individual, gradients=True):
+        self.individual = np.copy(individual)
 
-        ind_copy = self.chunks(ind_copy)
-        ind_copy = torch.tensor(ind_copy).float().unsqueeze(0).to(self.device)
+        self.individual = self.chunks(self.individual)
+        self.individual = torch.tensor(self.individual).float().unsqueeze(0).to(self.device)
 
-        x = F.interpolate((ind_copy + 1) / 2, size=self.pixel_size, mode="bilinear", align_corners=False)
-        x.requires_grad = True
+        self.individual = F.interpolate((self.individual + 1) / 2, size=self.pixel_size, mode="bilinear", align_corners=False)
 
-        return [x]
+        if gradients:
+            self.individual.requires_grad = True
+
+        optimizer = torch.optim.Adam([self.individual], lr=0.1)
+
+        return [optimizer]
 
     def __str__(self):
         return "fastpixeldraw"
 
-    def render(self, input_ind):
-        input_ind = input_ind[0]
-        img = F.interpolate(input_ind, size=(self.img_size, self.img_size), mode="nearest")
+    def render(self):
+        img = F.interpolate(self.individual, size=(self.img_size, self.img_size), mode="nearest")
         return img

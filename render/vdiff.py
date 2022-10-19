@@ -79,6 +79,8 @@ class VDiffRenderer(RenderingInterface):
 
         self.cur_gen = 0
 
+        self.individual = None
+
     def chunks(self, array):
         return np.reshape(array, (1, 3, self.gen_height, self.gen_width))
 
@@ -108,17 +110,21 @@ class VDiffRenderer(RenderingInterface):
 
         return individual
 
-    def to_adam(self, individual):
-        ind_copy = np.copy(individual)
+    def to_adam(self, individual, gradients=True):
+        self.individual = np.copy(individual)
 
-        ind_copy = self.chunks(ind_copy)
-        ind_copy = torch.tensor(ind_copy).float().to(self.device)
-        ind_copy.requires_grad = True
+        self.individual = self.chunks(self.individual)
+        self.individual = torch.tensor(self.individual).float().to(self.device)
 
-        return [ind_copy]
+        if gradients:
+            self.individual.requires_grad = True
 
-    def render(self, input_ind):
-        input_ind = input_ind[0]
+        optimizer = torch.optim.Adam([self.individual], lr=0.01)
+
+        return [optimizer]
+
+    def render(self):
+        input_ind = self.individual
 
         pred, v, next_x = sampling.sample_step(self.sample_state, input_ind, self.cur_gen, self.pred, self.v)
         self.pred = pred.detach()
@@ -135,7 +141,6 @@ class VDiffRenderer(RenderingInterface):
 
         return pixels
 
-    def makenoise(self, cur_it, x):
-        x = x[0]
+    def makenoise(self, cur_it):
         self.cur_gen = cur_it
-        return sampling.sample_noise(self.sample_state, x, cur_it, self.pred, self.v).detach()
+        return sampling.sample_noise(self.sample_state, self.individual, cur_it, self.pred, self.v).detach()
