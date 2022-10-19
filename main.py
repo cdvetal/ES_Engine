@@ -66,7 +66,7 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a farm with chickens"
+    args.clip_prompts = "a computer generated abstract image"
     # args.input_image = "dogcat.png"
 
     if args.from_checkpoint:

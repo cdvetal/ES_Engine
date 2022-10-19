@@ -1,7 +1,7 @@
 # IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
 IMG_SIZE = 256
 
-EVOLUTION_TYPE = 'cmaes'
+EVOLUTION_TYPE = 'adam'
 
 NUM_LINES = 16
 
@@ -17,9 +17,9 @@ SIGMA = 0.1
 
 LAMARCK = True
 ADAM_STEPS = 10
-# LR = 0.1
+LR = 0.1
 # LR = 1.
-LR = 0.03
+# LR = 0.03
 
 TARGET_FITNESS = 0.999
 RANDOM_SEED = None
@@ -34,7 +34,7 @@ TARGET_CLASS = "birdhouse"
 SAVE_ALL = False
 VERBOSE = False
 
-RENDERER = "biggan"
+RENDERER = "vqgan"
 
 model_groups = {
     "london,": "xception,vgg16,vgg19,resnet50,resnet50v2,resnet101,resnet152,resnet101v2,resnet152v2,inceptionv3,inceptionresnetv2,mobilenet,mobilenetv2,densenet121,densenet169,densenet201,nasnet,nasnetmobile,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7,",

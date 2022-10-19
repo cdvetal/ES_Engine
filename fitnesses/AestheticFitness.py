@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import clip
@@ -7,7 +8,15 @@ from torch import nn
 from torch.nn import functional as F
 
 from .fitness_interface import FitnessInterface
-from utils import wget_file
+
+
+def wget_file(url, out):
+    try:
+        print(f"Downloading {out} from {url}, please wait")
+        output = subprocess.check_output(['wget', '-O', out, url])
+    except subprocess.CalledProcessError as cpe:
+        output = cpe.output
+        print("Ignoring non-zero exit: ", output)
 
 
 class AestheticFitness(FitnessInterface):

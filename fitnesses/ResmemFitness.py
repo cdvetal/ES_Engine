@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import resmem
 import torch
@@ -6,7 +7,6 @@ from resmem import ResMem
 from torchvision import transforms
 
 from .fitness_interface import FitnessInterface
-from utils import wget_file, map_number
 
 resmem_url = 'https://github.com/pixray/resmem/releases/download/1.1.3_model/model.pt'
 
@@ -16,6 +16,19 @@ recenter = transforms.Compose((
     transforms.CenterCrop(227),
     )
 )
+
+
+def wget_file(url, out):
+    try:
+        print(f"Downloading {out} from {url}, please wait")
+        output = subprocess.check_output(['wget', '-O', out, url])
+    except subprocess.CalledProcessError as cpe:
+        output = cpe.output
+        print("Ignoring non-zero exit: ", output)
+
+
+def map_number(n, start1, stop1, start2, stop2):
+    return ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2
 
 
 class ResmemFitness(FitnessInterface):
