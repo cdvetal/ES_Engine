@@ -10,7 +10,7 @@ class PaletteFitness(FitnessInterface):
         self.palette_weight = -1
         self.target_palette = torch.FloatTensor(palette).requires_grad_(False).to(self.device)
 
-    def evaluate(self, img):
+    def evaluate(self, img, normalization=False):
         _pixels = img.permute(0, 2, 3, 1).reshape(-1, 3)
         palette_dists = torch.cdist(self.target_palette, _pixels, p=2)
         best_guesses = palette_dists.argmin(axis=0)
