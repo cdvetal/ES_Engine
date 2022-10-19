@@ -7,8 +7,6 @@ class SaturationFitness(FitnessInterface):
     def __init__(self):
         super(SaturationFitness, self).__init__()
 
-        self.saturation_weight = -1
-
     def evaluate(self, img):
         _pixels = img.permute(0, 2, 3, 1).reshape(-1, 3)
         rg = _pixels[:, 0] - _pixels[:, 1]
@@ -19,5 +17,5 @@ class SaturationFitness(FitnessInterface):
         mean_rggb = torch.sqrt(rg_mean ** 2 + yb_mean ** 2)
         colorfullness = std_rggb + .3 * mean_rggb
 
-        return -colorfullness * self.saturation_weight / 10.0
+        return colorfullness / 10.0
 

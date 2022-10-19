@@ -49,6 +49,8 @@ class ClipDrawRenderer(RenderingInterface):
             individual.append(np.array(points))
 
         individual = np.array(individual)
+        print(individual.shape)
+
         return individual.flatten()
 
     def get_individual(self):
@@ -59,6 +61,7 @@ class ClipDrawRenderer(RenderingInterface):
             individual.append(points.cpu().detach().numpy())
 
         individual = np.array(individual).flatten()
+        # print(individual.shape)
         return individual
 
     def to_adam(self, individual, gradients=True):

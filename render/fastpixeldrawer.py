@@ -29,7 +29,7 @@ class FastPixelRenderer(RenderingInterface):
         return individual.flatten()
 
     def get_individual(self):
-        return None
+        return self.individual.cpu().detach().numpy().flatten()
 
     def to_adam(self, individual, gradients=True):
         self.individual = np.copy(individual)

@@ -38,17 +38,18 @@ def evaluate(args, individual):
 
         if args.renderer_type == "vdiff" and gen >= 1:
             lr = renderer.sample_state[6][gen] / renderer.sample_state[5][gen]
-            individual = renderer.makenoise(gen, individual)
-            individual.requires_grad_()
-            individual = [individual]
-            optimizer = optim.Adam(individual, lr=min(lr * 0.001, 0.01))
+            renderer.individual = renderer.makenoise(gen)
+            renderer.individual.requires_grad_()
+            to_optimize = [renderer.individual]
+            opt = optim.Adam(to_optimize, lr=min(lr * 0.001, 0.01))
+            optimizers = [opt]
 
         if torch.min(img) < 0.0:
             img = (img + 1) / 2
 
         save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_{gen}.png")
 
-    print(fitness)
+    print(fitness.item())
 
     if args.lamarck:
         individual[:] = renderer.get_individual()

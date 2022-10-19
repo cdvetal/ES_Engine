@@ -36,8 +36,8 @@ class InputImage(FitnessInterface):
         with torch.no_grad():
             self.image_features = self.model.encode_image(image)
 
-    def evaluate(self, img):
-        # If the image is not available do not contribute to the loss
+    def evaluate(self, img, normalization=False):
+        # If the image is not available do not contribute to the fitness
         if self.image_features is None:
             return torch.tensor([0])
 
@@ -53,13 +53,13 @@ class InputImage(FitnessInterface):
         # convert_tensor = torchvision.transforms.ToTensor()
         into = torch.cat(p_s, 0).to(self.device)
 
-        normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
-                                                     (0.26862954, 0.26130258, 0.27577711))
-        into = normalize((into + 1) / 2)
+        if normalization:
+            normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
+                                                         (0.26862954, 0.26130258, 0.27577711))
+            into = normalize((into + 1) / 2)
 
         image_features = self.model.encode_image(into)
-        text_clip_loss = torch.cosine_similarity(self.image_features, image_features, dim=-1).mean()
-        text_clip_loss *= 1
+        cosine_similarity = torch.cosine_similarity(self.image_features, image_features, dim=-1).mean()
 
-        return text_clip_loss
+        return cosine_similarity
 

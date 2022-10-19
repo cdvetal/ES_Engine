@@ -56,6 +56,8 @@ class LineDrawRenderer(RenderingInterface):
             individual.append(np.array(points))
 
         individual = np.array(individual)
+        print(individual.shape)
+
         return individual.flatten()
 
     def get_individual(self):

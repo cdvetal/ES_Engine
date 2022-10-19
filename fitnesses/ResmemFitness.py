@@ -42,7 +42,7 @@ class ResmemFitness(FitnessInterface):
         # Set the model to inference mode.
         self.model.eval()
 
-        self.symmetry_weight = -1
+        self.resmem_weight = -1
 
     def evaluate(self, img):
         # print(images.shape)
@@ -57,4 +57,7 @@ class ResmemFitness(FitnessInterface):
         mapped_mean = map_number(mean, 0.4, 1.0, 0, 1)
         the_loss = 0.05 * mapped_mean
 
-        return the_loss
+        # Loss must be multiplied by a negative value to obtain fitness
+        resmem_fitness = the_loss * self.resmem_weight
+
+        return resmem_fitness
