@@ -54,8 +54,6 @@ def setup_args():
     parser.add_argument("--networks", default=NETWORKS, help="comma separated list of networks (no spaces). Default is {}.".format(NETWORKS))
     parser.add_argument('--target-fit', default=TARGET_FITNESS, type=float, help='target fitness stopping criteria. Default is {}.'.format(TARGET_FITNESS))
     parser.add_argument('--from-checkpoint', default=FROM_CHECKPOINT, help='Checkpoint file from which you want to continue evolving. Default is {}.'.format(FROM_CHECKPOINT))
-    parser.add_argument('--init-mu', default=INIT_MU, type=float, help='Mean value for the initialization of the population. Default is {}.'.format(INIT_MU))
-    parser.add_argument('--init-sigma', default=INIT_SIGMA, type=float, help='Standard deviation value for the initialization of the population. Default is {}.'.format(INIT_SIGMA))
     parser.add_argument('--sigma', default=SIGMA, type=float, help='The initial standard deviation of the distribution. Default is {}.'.format(SIGMA))
     parser.add_argument('--clip-model', default=CLIP_MODEL, help='Name of the CLIP model to use. Default is {}. Availables: {}'.format(CLIP_MODEL, clip.available_models()))
     parser.add_argument('--clip-prompts', default=None, help='CLIP prompts to use for the generation. Default is the target class')
@@ -66,7 +64,7 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a painting of superman by van gogh"
+    args.clip_prompts = "darth vader"
     # args.input_image = "dogcat.png"
 
     if args.from_checkpoint:
@@ -113,7 +111,7 @@ def setup_args():
     pydiffvg.set_use_gpu(torch.cuda.is_available())
     pydiffvg.set_device(args.device)
 
-    args.normalization = (args.renderer_type == "biggan" or args.renderer_type == "vdiff")
+    args.normalization = (args.renderer_type == "biggan")
 
     args.renderer = render_table[args.renderer_type](args)
 

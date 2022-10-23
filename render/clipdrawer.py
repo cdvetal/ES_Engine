@@ -35,14 +35,12 @@ class ClipDrawRenderer(RenderingInterface):
             p0 = (random.random(), random.random())
             points.append(p0)
             for j in range(self.num_segments):
-                radius = 0.1
-                p1 = (p0[0] + radius * (random.random() - 0.5), p0[1] + radius * (random.random() - 0.5))
-                p2 = (p1[0] + radius * (random.random() - 0.5), p1[1] + radius * (random.random() - 0.5))
-                p3 = (p2[0] + radius * (random.random() - 0.5), p2[1] + radius * (random.random() - 0.5))
+                p1 = (random.random(), random.random())
+                p2 = (random.random(), random.random())
+                p3 = (random.random(), random.random())
                 points.append(p1)
                 points.append(p2)
                 points.append(p3)
-                p0 = p3
             points = torch.tensor(points)
             # points[:, 0] *= self.img_size
             # points[:, 1] *= self.img_size
@@ -80,9 +78,14 @@ class ClipDrawRenderer(RenderingInterface):
             p0 = (ind_copy[i][0][0], ind_copy[i][0][1])
             points.append(p0)
             for j in range(self.num_segments):
-                p1 = (ind_copy[i][(j * 3) + 1][0], ind_copy[i][(j * 3) + 1][1])
-                p2 = (ind_copy[i][(j * 3) + 2][0], ind_copy[i][(j * 3) + 2][1])
-                p3 = (ind_copy[i][(j * 3) + 3][0], ind_copy[i][(j * 3) + 3][1])
+                radius = 0.1
+                p1 = (p0[0] + radius * (ind_copy[i][(j * 3) + 1][0] - 0.5),
+                      p0[1] + radius * (ind_copy[i][(j * 3) + 1][1] - 0.5))
+                p2 = (p1[0] + radius * (ind_copy[i][(j * 3) + 2][0] - 0.5),
+                      p1[1] + radius * (ind_copy[i][(j * 3) + 2][1] - 0.5))
+                p3 = (p2[0] + radius * (ind_copy[i][(j * 3) + 3][0] - 0.5),
+                      p2[1] + radius * (ind_copy[i][(j * 3) + 3][1] - 0.5))
+                p0 = p3
                 points.append(p1)
                 points.append(p2)
                 points.append(p3)
@@ -120,7 +123,8 @@ class ClipDrawRenderer(RenderingInterface):
         self.shapes = shapes
         self.shape_groups = shape_groups
 
-        return [points_optim, width_optim, color_optim]
+        # return [points_optim, width_optim, color_optim]
+        return [points_optim]
 
     def __str__(self):
         return "clipdraw"

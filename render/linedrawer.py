@@ -38,18 +38,15 @@ class LineDrawRenderer(RenderingInterface):
             num_segments = self.stroke_length
             # num_control_points = torch.zeros(num_segments, dtype=torch.int32) + 2
             points = []
-            radius = 0.5
-            p0 = (0.5 + radius * (random.random() - 0.5), 0.5 + radius * (random.random() - 0.5))
+            p0 = (random.random(), random.random())
             points.append(p0)
             for j in range(num_segments):
-                radius = 1.0 / (num_segments + 2)
-                p1 = (p0[0] + radius * (random.random() - 0.5), p0[1] + radius * (random.random() - 0.5))
-                p2 = (p1[0] + radius * (random.random() - 0.5), p1[1] + radius * (random.random() - 0.5))
-                p3 = (p2[0] + radius * (random.random() - 0.5), p2[1] + radius * (random.random() - 0.5))
+                p1 = (random.random(), random.random())
+                p2 = (random.random(), random.random())
+                p3 = (random.random(), random.random())
                 points.append(p1)
                 points.append(p2)
                 points.append(p3)
-                p0 = (self.bound(p3[0], 0, 1), self.bound(p3[1], 0, 1))
             points = torch.tensor(points)
             # points[:, 0] *= self.img_size
             # points[:, 1] *= self.img_size
@@ -95,12 +92,14 @@ class LineDrawRenderer(RenderingInterface):
             num_segments = self.stroke_length
             num_control_points = torch.zeros(num_segments, dtype=torch.int32) + 2
             points = []
-            p0 = (ind_copy[i][0][0], ind_copy[i][0][1])
+            radius = 0.5
+            p0 = (0.5 + radius * (ind_copy[i][0][0] - 0.5), 0.5 + radius * (ind_copy[i][0][1] - 0.5))
             points.append(p0)
             for j in range(num_segments):
-                p1 = (ind_copy[i][(j * 3) + 1][0], ind_copy[i][(j * 3) + 1][1])
-                p2 = (ind_copy[i][(j * 3) + 2][0], ind_copy[i][(j * 3) + 2][1])
-                p3 = (ind_copy[i][(j * 3) + 3][0], ind_copy[i][(j * 3) + 3][1])
+                radius = 1.0 / (num_segments + 2)
+                p1 = (p0[0] + radius * (ind_copy[i][(j * 3) + 1][0] - 0.5), p0[1] + radius * (ind_copy[i][(j * 3) + 1][1] - 0.5))
+                p2 = (p1[0] + radius * (ind_copy[i][(j * 3) + 2][0] - 0.5), p1[1] + radius * (ind_copy[i][(j * 3) + 2][1] - 0.5))
+                p3 = (p2[0] + radius * (ind_copy[i][(j * 3) + 3][0] - 0.5), p2[1] + radius * (ind_copy[i][(j * 3) + 3][1] - 0.5))
                 points.append(p1)
                 points.append(p2)
                 points.append(p3)
@@ -132,7 +131,8 @@ class LineDrawRenderer(RenderingInterface):
         self.shapes = shapes
         self.shape_groups = shape_groups
 
-        return [points_optim, width_optim]
+        # return [points_optim, width_optim]
+        return [points_optim]
 
     def __str__(self):
         return "linedraw"
@@ -147,5 +147,4 @@ class LineDrawRenderer(RenderingInterface):
         img = img.unsqueeze(0)
         img = img.permute(0, 3, 1, 2)  # NHWC -> NCHW
 
-        pydiffvg.save_svg('out.svg', self.img_size, self.img_size, self.shapes, self.shape_groups)
         return img
