@@ -132,7 +132,6 @@ def setup_args():
     model, preprocess = clip.load(args.clip_model, device=args.device)
     args.clip = model
     args.preprocess = preprocess
-
     print("CLIP module loaded.")
 
     args.fitnesses = []

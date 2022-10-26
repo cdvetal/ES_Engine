@@ -54,12 +54,25 @@ class ClipDrawRenderer(RenderingInterface):
     def get_individual(self):
         individual = []
         for path in self.shapes:
-            points = torch.tensor(path.points)
-            points /= self.img_size
-            individual.append(points.cpu().detach().numpy())
+            points = path.points.clone().detach()
+            points[:, 0] /= self.img_size
+            points[:, 1] /= self.img_size
+            new_points = []
+            for p, point in enumerate(points):
+                if p == 0:
+                    p_x = points[p][0]
+                    p_y = points[p][1]
+                    new_points.append([p_x, p_y])
+                else:
+                    radius = 0.1
+                    p_x = ((points[p][0] - points[p - 1][0]) / radius) + 0.5
+                    p_y = ((points[p][1] - points[p - 1][1]) / radius) + 0.5
+                    new_points.append([p_x, p_y])
+
+            new_points = np.array(new_points)
+            individual.append(new_points)
 
         individual = np.array(individual).flatten()
-        # print(individual.shape)
         return individual
 
     def to_adam(self, individual, gradients=True):

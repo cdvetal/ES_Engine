@@ -23,7 +23,7 @@ def evaluate(args, individual):
 
     img = renderer.render()
     fitness = calculate_fitness(args.fitnesses, img)
-
+    
     for gen in range(args.adam_steps):
         for optimizer in optimizers:
             optimizer.zero_grad()
@@ -53,6 +53,11 @@ def evaluate(args, individual):
 
     if args.lamarck:
         individual[:] = renderer.get_individual()
+        """
+        optimizers = renderer.to_adam(individual)
+        img = renderer.render()
+        save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_extra.png")
+        """
 
     # print("iter {:05d} {}/{} reward: {:4.10f} {} {}".format(i, imagenet_class, imagenet_name, 100.0*r, r3, is_best))
     # return [(rewards[0],), fitness_partials]
@@ -86,9 +91,8 @@ def main_cma_es(args):
     logbook = tools.Logbook()
     logbook.header = "gen", "evals", "std", "min", "avg", "max"
 
-    for gen in range(args.n_gens):
-        print("Generation:", gen)
-        cur_iteration = gen
+    for cur_iteration in range(args.n_gens):
+        print("Generation:", cur_iteration)
         # Generate a new population
         population = toolbox.generate()
         # Evaluate the individuals
@@ -104,7 +108,7 @@ def main_cma_es(args):
                 # img.save(f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_{index}.png")
                 if torch.min(img) < 0.0:
                     img = (img + 1) / 2
-                save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_{index}.png")
+                save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_{index}.png")
 
         # Update the strategy with the evaluated individuals
         toolbox.update(population)
@@ -113,27 +117,27 @@ def main_cma_es(args):
         # currently evaluated population
         halloffame.update(population)
         record = stats.compile(population)
-        logbook.record(evals=len(population), gen=gen, **record)
+        logbook.record(evals=len(population), gen=cur_iteration, **record)
 
         if args.verbose:
             print(logbook.stream)
 
         if halloffame is not None:
-            save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [gen, halloffame[0], halloffame[0].fitness.values, "_"])
+            save_gen_best(args.save_folder, args.sub_folder, args.experiment_name, [cur_iteration, halloffame[0], halloffame[0].fitness.values, "_"])
             print("Best individual:", halloffame[0].fitness.values)
             _ = renderer.to_adam(halloffame[0], gradients=False)
             img = renderer.render()
             if torch.min(img) < 0.0:
                 img = (img + 1) / 2
-            save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{gen}_best.png")
+            save_image(img, f"{args.save_folder}/{args.sub_folder}/{args.experiment_name}_{cur_iteration}_best.png")
 
         if halloffame[0].fitness.values[0] >= args.target_fit:
             print("Reached target fitness.\nExiting")
             break
 
-        if gen % args.checkpoint_freq == 0:
+        if cur_iteration % args.checkpoint_freq == 0:
             # Fill the dictionary using the dict(key=value[, ...]) constructor
-            cp = dict(population=population, generation=gen, halloffame=halloffame, logbook=logbook,
+            cp = dict(population=population, generation=cur_iteration, halloffame=halloffame, logbook=logbook,
                       np_rndstate=np.random.get_state(), rndstate=random.getstate())
             with open("{}/{}/{}_checkpoint.pkl".format(args.save_folder, args.sub_folder, args.experiment_name), "wb") as cp_file:
                 pickle.dump(cp, cp_file)

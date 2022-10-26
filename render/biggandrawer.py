@@ -47,7 +47,7 @@ class BigGANRenderer(RenderingInterface):
         if gradients:
             self.individual.requires_grad = True
 
-        optimizer = torch.optim.Adam([self.individual], lr=0.07)
+        optimizer = torch.optim.Adam([self.individual], lr=0.04)
 
         return [optimizer]
 
