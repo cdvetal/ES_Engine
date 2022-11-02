@@ -11,6 +11,8 @@ class SymmetryFitness(FitnessInterface):
         self.symmetry_weight = -1
 
     def evaluate(self, img, normalization=False):
+        img = img.to(self.device)
+
         mseloss = nn.MSELoss()
         cur_loss = mseloss(img, torch.flip(img, [3]))
 

@@ -8,6 +8,8 @@ class SaturationFitness(FitnessInterface):
         super(SaturationFitness, self).__init__()
 
     def evaluate(self, img, normalization=False):
+        img = img.to(self.device)
+
         _pixels = img.permute(0, 2, 3, 1).reshape(-1, 3)
         rg = _pixels[:, 0] - _pixels[:, 1]
         yb = 0.5 * (_pixels[:, 0] + _pixels[:, 1]) - _pixels[:, 2]

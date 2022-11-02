@@ -1,7 +1,7 @@
 # IMG_SIZE = IMG_WIDTH, IMG_HEIGHT = (512, 512)  # ATTENTION!!!! Only square images now please.
 IMG_SIZE = 256
 
-EVOLUTION_TYPE = 'cmaes'
+EVOLUTION_TYPE = 'adam'
 
 NUM_LINES = 20
 
@@ -9,7 +9,7 @@ SAVE_FOLDER = 'experiments'
 CHECKPOINT_FREQ = 10
 
 POP_SIZE = 2
-N_GENS = 10
+N_GENS = 100
 SIGMA = 0.01
 
 LAMARCK = True
@@ -31,7 +31,7 @@ TARGET_CLASS = "birdhouse"
 SAVE_ALL = False
 VERBOSE = False
 
-RENDERER = "clipdraw"
+RENDERER = "pylinhas"
 
 model_groups = {
     "london,": "xception,vgg16,vgg19,resnet50,resnet50v2,resnet101,resnet152,resnet101v2,resnet152v2,inceptionv3,inceptionresnetv2,mobilenet,mobilenetv2,densenet121,densenet169,densenet201,nasnet,nasnetmobile,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7,",

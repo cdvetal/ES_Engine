@@ -37,6 +37,8 @@ class InputImage(FitnessInterface):
             self.image_features = self.model.encode_image(image)
 
     def evaluate(self, img, normalization=False):
+        img = img.to(self.device)
+
         # If the image is not available do not contribute to the fitness
         if self.image_features is None:
             return torch.tensor([0])

@@ -29,6 +29,8 @@ class ClipPrompt(FitnessInterface):
             self.text_features = self.model.encode_text(text_inputs)
 
     def evaluate(self, img, normalization=False):
+        img = img.to(self.device)
+
         p_s = []
 
         _, channels, sideX, sideY = img.shape

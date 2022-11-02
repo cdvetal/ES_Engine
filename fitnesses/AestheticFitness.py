@@ -52,6 +52,8 @@ class AestheticFitness(FitnessInterface):
             self.preprocess = preprocess
 
     def evaluate(self, img, normalization=False):
+        img = img.to(self.device)
+
         p_s = []
 
         _, channels, sideX, sideY = img.shape

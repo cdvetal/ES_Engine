@@ -85,6 +85,8 @@ class SmoothnessFitness(FitnessInterface):
         self.smoothness_edge_order = 1
 
     def evaluate(self, img, normalization=False):
+        img = img.to(self.device)
+
         if self.smoothness_gaussian_kernel:
             smoothing = GaussianSmoothing(3, self.smoothness_gaussian_kernel, self.smoothness_gaussian_std).to(
                 self.device)
