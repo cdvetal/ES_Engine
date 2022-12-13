@@ -132,9 +132,9 @@ class PixelRenderer(RenderingInterface):
                 else:
                     pts = rect_from_corners(p0, p1)
                 pts = torch.tensor(pts, dtype=torch.float32).view(-1, 2)
-                path = pydiffvg.Polygon(pts, True)
+                # path = pydiffvg.Polygon(pts, True)
 
-                # path = pydiffvg.Rect(p_min=torch.tensor(p0), p_max=torch.tensor(p1))
+                path = pydiffvg.Rect(p_min=torch.tensor(p0), p_max=torch.tensor(p1))
                 shapes.append(path)
                 path_group = pydiffvg.ShapeGroup(shape_ids=torch.tensor([len(shapes) - 1]), stroke_color=None,
                                                  fill_color=cell_color)

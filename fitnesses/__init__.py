@@ -1,6 +1,7 @@
 from .fitness_interface import FitnessInterface
 from .fitness_interface import calculate_fitness
 from .AestheticFitness import AestheticFitness
+from .Aesthetic2Fitness import Aesthetic2Fitness
 from .ClipPrompt import ClipPrompt
 from .InputImage import InputImage
 from .GaussianFitness import GaussianFitness

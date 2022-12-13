@@ -20,7 +20,7 @@ def wget_file(url, out):
 
 
 class AestheticFitness(FitnessInterface):
-    def __init__(self, model=None, preprocess=None, clip_model="ViT-B/32"):
+    def __init__(self, model=None, preprocess=None, clip_model="ViT-B/16"):
         super(AestheticFitness, self).__init__()
         self.aesthetic_target = 1
         # Only available here: https://twitter.com/RiversHaveWings/status/1472346186728173568
@@ -34,10 +34,6 @@ class AestheticFitness(FitnessInterface):
         # self.ae_reg.load_state_dict(torch.load(self.model_path))
         self.ae_reg.bias.data = layer_weights["bias"].to(self.device)
         self.ae_reg.weight.data = layer_weights["weight"].to(self.device)
-        self.target_rating = torch.ones(size=(1, 1)) * self.aesthetic_target
-        self.target_rating = self.target_rating.to(self.device)
-
-        self.aesthetic_weight = -1
 
         self.clip_model = "ViT-B/32"
 
@@ -69,13 +65,17 @@ class AestheticFitness(FitnessInterface):
         if normalization:
             normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
                                                          (0.26862954, 0.26130258, 0.27577711))
-            into = normalize((into + 1) / 2)
+            into = normalize((into + 1) / 2)       
+        
+        with torch.no_grad():
+            image_features = self.model.encode_image(into)
 
-        image_features = self.model.encode_image(into)
+        # img = torchvision.transforms.functional.resize(img, (224, 224))
+
+        # with torch.no_grad():
+        #     image_features = self.model.encode_image(img)
 
         aes_rating = self.ae_reg(F.normalize(image_features.float(), dim=-1)).to(self.device)
-        aes_distance = (aes_rating - self.target_rating).square().mean() * 0.02
+        aes_rating = aes_rating.square().mean() * 0.02
 
-        aes_fitness = aes_distance * self.aesthetic_weight
-
-        return aes_fitness
+        return aes_rating

@@ -64,7 +64,7 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "darth vader"
+    args.clip_prompts = "a farm with chicken"
     # args.input_image = "dogcat.png"
 
     if args.from_checkpoint:
@@ -124,6 +124,7 @@ def setup_args():
         print("- ", key)
     """
 
+    """
     if args.clip_model not in clip.available_models():
         args.clip_model = "ViT-B/32"
 
@@ -140,9 +141,12 @@ def setup_args():
 
     if args.input_image:
         args.fitnesses.append(InputImage(args.input_image, model=args.clip, preprocess=args.preprocess))
+    """
 
+    args.fitnesses = []
     # args.fitnesses.append(PaletteFitness(palette=[[0/255.0, 0/255.0, 0/255.0], [255/255.0, 241/255.0, 232/255.0]]))
-    # args.fitnesses.append(AestheticFitness(model=args.clip, preprocess=args.preprocess))
+    # args.fitnesses.append(AestheticFitness())
+    args.fitnesses.append(Aesthetic2Fitness())
     # args.fitnesses.append(GaussianFitness())
     # args.fitnesses.append(ResmemFitness())
     # args.fitnesses.append(SaturationFitness())
