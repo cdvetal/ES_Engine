@@ -5,6 +5,7 @@ import clip
 import torch
 import torchvision
 from torch import nn
+from torch.nn import functional as F
 
 from .fitness_interface import FitnessInterface
 
@@ -112,9 +113,9 @@ class Aesthetic2Fitness(FitnessInterface):
 
         image_features = self.model.encode_image(img)
 
-        im_emb_arr = normalized(image_features.cpu().detach().numpy())
+        im_emb_arr = F.normalize(image_features.float(), dim=-1)
 
-        aes_rating = self.mlp(torch.from_numpy(im_emb_arr).to(self.device).type(self.tensor))
+        aes_rating = self.mlp(im_emb_arr)
         aes_rating = aes_rating.square().mean() * 0.02
 
         return aes_rating
