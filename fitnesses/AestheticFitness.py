@@ -50,6 +50,7 @@ class AestheticFitness(FitnessInterface):
     def evaluate(self, img, normalization=False):
         img = img.to(self.device)
 
+        """
         p_s = []
 
         _, channels, sideX, sideY = img.shape
@@ -67,13 +68,12 @@ class AestheticFitness(FitnessInterface):
                                                          (0.26862954, 0.26130258, 0.27577711))
             into = normalize((into + 1) / 2)       
         
-        with torch.no_grad():
-            image_features = self.model.encode_image(into)
+        image_features = self.model.encode_image(into)
+        """
 
-        # img = torchvision.transforms.functional.resize(img, (224, 224))
+        img = torchvision.transforms.functional.resize(img, (224, 224))
 
-        # with torch.no_grad():
-        #     image_features = self.model.encode_image(img)
+        image_features = self.model.encode_image(img)
 
         aes_rating = self.ae_reg(F.normalize(image_features.float(), dim=-1)).to(self.device)
         aes_rating = aes_rating.square().mean() * 0.02

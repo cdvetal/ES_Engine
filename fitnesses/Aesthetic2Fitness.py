@@ -110,8 +110,7 @@ class Aesthetic2Fitness(FitnessInterface):
 
         img = torchvision.transforms.functional.resize(img, (224, 224))
 
-        with torch.no_grad():
-            image_features = self.model.encode_image(img)
+        image_features = self.model.encode_image(img)
 
         im_emb_arr = normalized(image_features.cpu().detach().numpy())
 
