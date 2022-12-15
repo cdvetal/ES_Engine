@@ -136,8 +136,7 @@ class ClipDrawRenderer(RenderingInterface):
         self.shapes = shapes
         self.shape_groups = shape_groups
 
-        # return [points_optim, width_optim, color_optim]
-        return [points_optim]
+        return [points_optim, width_optim, color_optim]
 
     def __str__(self):
         return "clipdraw"

@@ -64,8 +64,8 @@ def setup_args():
 
     args = parser.parse_args()
 
-    args.clip_prompts = "a farm with chicken"
-    # args.input_image = "dogcat.png"
+    # args.clip_prompts = "a chicken farm"
+    args.input_image = "dogcat.png"
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
@@ -124,7 +124,6 @@ def setup_args():
         print("- ", key)
     """
 
-    """
     if args.clip_model not in clip.available_models():
         args.clip_model = "ViT-B/32"
 
@@ -141,18 +140,16 @@ def setup_args():
 
     if args.input_image:
         args.fitnesses.append(InputImage(args.input_image, model=args.clip, preprocess=args.preprocess))
-    """
 
-    args.fitnesses = []
     # args.fitnesses.append(PaletteFitness(palette=[[0/255.0, 0/255.0, 0/255.0], [255/255.0, 241/255.0, 232/255.0]]))
     # args.fitnesses.append(AestheticFitness())
-    args.fitnesses.append(Aesthetic2Fitness())
+    # args.fitnesses.append(Aesthetic2Fitness())
     # args.fitnesses.append(GaussianFitness())
     # args.fitnesses.append(ResmemFitness())
     # args.fitnesses.append(SaturationFitness())
     # args.fitnesses.append(SmoothnessFitness())
     # args.fitnesses.append(SymmetryFitness())
-    # args.fitnesses.append(StyleFitness(style_file="style.jpg"))
+    # args.fitnesses.append(StyleFitness(style_file="style.png"))
     # args.fitnesses.append(EdgeFitness())
 
     if args.pop_size <= 1:

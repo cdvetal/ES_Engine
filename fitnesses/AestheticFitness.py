@@ -75,6 +75,6 @@ class AestheticFitness(FitnessInterface):
 
         image_features = self.model.encode_image(img)
 
-        aes_rating = self.ae_reg(F.normalize(image_features.float(), dim=-1)).to(self.device)
+        aes_rating = self.ae_reg(F.normalize(image_features.float(), dim=-1)).to(self.device) * 0.02
 
         return aes_rating

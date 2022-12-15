@@ -80,7 +80,7 @@ class SmoothnessFitness(FitnessInterface):
         self.smoothness_weight = -0.5
         self.smoothness_type = 'log'
         self.smoothness_gaussian_kernel = 0
-        self.smoothness_gaussian_std = 1
+        self.smoothness_gaussian_std = 0.5
         self.smoothness_spacing = 1
         self.smoothness_edge_order = 1
 
@@ -88,8 +88,7 @@ class SmoothnessFitness(FitnessInterface):
         img = img.to(self.device)
 
         if self.smoothness_gaussian_kernel:
-            smoothing = GaussianSmoothing(3, self.smoothness_gaussian_kernel, self.smoothness_gaussian_std).to(
-                self.device)
+            smoothing = GaussianSmoothing(3, self.smoothness_gaussian_kernel, self.smoothness_gaussian_std).to(self.device)
             img = smoothing(img)
 
         _pixels = img.permute(0, 2, 3, 1).reshape(-1, img.shape[2], 3)

@@ -458,7 +458,10 @@ class StyleFitness(FitnessInterface):
         self.stylefitness_every = 1
 
         if style_file:
-            self.style = Image.open(style_file)
+            self.style = Image.open(style_file).convert('RGBA')
+            background = Image.new('RGBA', self.style.size, (255, 255, 255))
+            self.style = Image.alpha_composite(background, self.style).convert("RGB")
+            print(self.style.mode)
 
         self.extractor = Vgg16_Extractor(space=self.stylefitness_ospace).to(self.device)
 
@@ -468,4 +471,5 @@ class StyleFitness(FitnessInterface):
         if self.resized is None:
             self.resized = TF.to_tensor(self.style).to(self.device).unsqueeze(0)
             self.resized = TF.resize(self.resized, img.size()[2:4], TF.InterpolationMode.BICUBIC)
+            print(self.resized.shape, img.shape)
         return strotss_loss(img, self.resized, self.stylefitness_content_weight * 16, extractor=self.extractor)

@@ -104,7 +104,7 @@ class VDiffRenderer(RenderingInterface):
         # [model, steps, eta, extra_args, ts, alphas, sigmas]
         self.sample_state = sampling.sample_setup(self.model, x, self.steps, self.eta, {})
 
-        individual = x.cpu().detach().numpy()
+        individual = x.cpu().detach().numpy().flatten()
 
         print(individual.shape)
 

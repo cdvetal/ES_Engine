@@ -25,17 +25,17 @@ class MLP(nn.Module):
         self.input_size = input_size
         self.layers = nn.Sequential(
             nn.Linear(self.input_size, 1024),
-            #nn.ReLU(),
+            # nn.ReLU(),
             nn.Dropout(0.2),
             nn.Linear(1024, 128),
-            #nn.ReLU(),
+            # nn.ReLU(),
             nn.Dropout(0.2),
             nn.Linear(128, 64),
-            #nn.ReLU(),
+            # nn.ReLU(),
             nn.Dropout(0.1),
 
             nn.Linear(64, 16),
-            #nn.ReLU(),
+            # nn.ReLU(),
 
             nn.Linear(16, 1)
         )
@@ -61,7 +61,9 @@ class Aesthetic2Fitness(FitnessInterface):
         self.model_path = Path("models/sac+logos+ava1-l14-linearMSE.pth")
 
         if not self.model_path.exists():
-            wget_file("https://raw.githubusercontent.com/christophschuhmann/improved-aesthetic-predictor/main/sac%2Blogos%2Bava1-l14-linearMSE.pth", self.model_path)
+            wget_file(
+                "https://raw.githubusercontent.com/christophschuhmann/improved-aesthetic-predictor/main/sac%2Blogos%2Bava1-l14-linearMSE.pth",
+                self.model_path)
 
         self.mlp = MLP(768).to(self.device)
         self.mlp.load_state_dict(torch.load(self.model_path))
@@ -105,7 +107,7 @@ class Aesthetic2Fitness(FitnessInterface):
             normalize = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
                                                          (0.26862954, 0.26130258, 0.27577711))
             into = normalize((into + 1) / 2)
-        
+
         image_features = self.model.encode_image(into)
         """
 
@@ -113,9 +115,6 @@ class Aesthetic2Fitness(FitnessInterface):
 
         image_features = self.model.encode_image(img)
 
-        im_emb_arr = F.normalize(image_features.float(), dim=-1)
-
-        aes_rating = self.mlp(im_emb_arr)
-        aes_rating = aes_rating.square().mean() * 0.02
+        aes_rating = self.mlp(F.normalize(image_features.float(), dim=-1)).to(self.device) * 0.02
 
         return aes_rating
