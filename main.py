@@ -64,8 +64,8 @@ def setup_args():
 
     args = parser.parse_args()
 
-    # args.clip_prompts = "a chicken farm"
-    args.input_image = "dogcat.png"
+    # args.clip_prompts = "A galleon stranded on a sea of flowers, sunset, dusk, light effect, by Marc Simonetti"
+    # args.input_image = "a.png"
 
     if args.from_checkpoint:
         args.experiment_name = args.from_checkpoint.replace("_checkpoint.pkl", "")
